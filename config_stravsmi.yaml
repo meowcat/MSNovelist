@@ -1,0 +1,13 @@
+base_folder: C:\Cloud\SWITCHdrive\CVAE-molecule\CVAE-master-data\
+smiles_full: .\smiles.txt
+smiles_subset: .\smiles_sub.txt
+subset_size: 107
+smiles_fingerprints: .\smiles_fp.pkl
+smiles_encoded: .\smiles_enc.h5
+epochs: 1
+batch_size: 128
+cell: LSTM
+rnn_hidden_size: 256
+rnn_dropout: 0.3
+fp_embedding_size: 512
+fp_dropout: 0.3

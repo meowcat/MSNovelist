@@ -1,0 +1,16 @@
+base_folder: /storage/smiles/
+smiles_full: .\smiles.txt
+smiles_subset: .\smiles_sub.txt
+subset_size: 1000
+smiles_fingerprints: .\smiles_fp.pkl
+smiles_encoded: .\smiles_enc.h5
+epochs: 1
+batch_size: 128
+rnn_cell: LSTM
+#rnn_activation: relu
+rnn_hidden_size: 256
+rnn_dropout: 0.3
+fp_embedding_size: 512
+fp_dropout: 0.3
+hdf5_lock: "FALSE"
+weights_folder: /storage/weights/
