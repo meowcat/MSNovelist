@@ -1,0 +1,14 @@
+models/__pycache__/
+*.pyc
+config.UCH-STRAVSMI-NB.yaml
+.ps_project/
+*/.ipynb_checkpoints/
+.ipynb_checkpoints/
+*.ipynb
+*.png
+*.pkl
+asmsmols 
+asmsmols/*
+config/evaluation
+config/training
+config/trained 

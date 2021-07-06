@@ -1,9 +1,0 @@
-paperspace jobs create --container stravsm/chem-cpu --machineType C2 --command "python smiles_prepare.py"
-paperspace jobs create --container stravsm/chem-cpu --machineType C2 --command "python smiles_fingerprint.py"
-paperspace jobs create --container stravsm/chem-cpu --machineType C2 --command "python smiles_transform.py"
-
-paperspace jobs create --container stravsm/chem-gpu --machineType GPU+ --command "python smiles_model.py"
-
-
-paperspace jobs create --container stravsm/chem-cpu --machineType C2 --command "jupyter notebook --no-browser --ip=0.0.0.0 --allow-root --NotebookApp.token= --notebook-dir=/storage" --ports 8888:8888
-

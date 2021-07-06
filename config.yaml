@@ -1,16 +1,79 @@
-base_folder: /storage/smiles/
-smiles_full: .\smiles.txt
-smiles_subset: .\smiles_sub.txt
-subset_size: 1000
-smiles_fingerprints: .\smiles_fp.pkl
-smiles_encoded: .\smiles_enc.h5
-epochs: 1
-batch_size: 128
-rnn_cell: LSTM
-#rnn_activation: relu
-rnn_hidden_size: 256
-rnn_dropout: 0.3
-fp_embedding_size: 512
-fp_dropout: 0.3
+base_folder: ''
+db_path: ''
+fp_source: ''
+fp_map: ''
+epochs: 20
+# steps per epoch automatic: set to <0
+training_id: ''
+cv_fold: 0
+cv_folds: 0
+steps_per_epoch: -1
+steps_per_epoch_validation: -1
+batch_size: 32
 hdf5_lock: "FALSE"
-weights_folder: /storage/weights/
+model_name: 'models.model_flex_20190401'
+sampler_name: ''
+fingerprinter_path: ''
+fingerprinter_threads: 2
+fingerprinter_cache: ''
+weights_folder: ''
+eval_folder: ''
+log_folder: ''
+weights: model1582207334weights-improvement-11-0.0139.hdf5
+#weights: model1555016013weights-improvement-20-0.0111.hdf5
+#query_fp: 1_C20H19NO5_M+H+.fpt
+sirius_bin: /usr/local/bin/sirius
+training_set: train
+validation_set: validate
+pipeline_x: []
+pipeline_y: []
+pipeline_x_eval: []
+preprocessing_workers_preselect: 10
+preprocessing_workers_pubchem: 30
+preprocessing_preselect_limit: 1000000
+eval_n: 16
+eval_n_total: -1
+eval_k: 16
+eval_kk: 20
+eval_steps: 128
+eval_id: ''
+eval_counter: ''
+eval_detail: False
+model_tag: ''
+eval_top_n: 1
+java_memory: 2048
+fp_overlay_method: none
+tensorflow_trace: False
+training_verbose: 2
+reinforcement_config:
+    sigma: 50
+    iterations_per_step: 1
+    reinforcement_steps: 50
+    reinforcement_steps_store: [4, 9, 24, 49]
+    temperature: 2.
+reinforcement_eval_start: -1
+reinforcement_eval_count: -1
+eval_temperature: 1.0
+decoder_name: 'beam_search'
+all_evaluation_sets:
+    - 'fold0-casmi'
+    - 'fold0-sirius'
+    - 'fold0-holdout'
+    - 'fold1-sirius'
+    - 'fold1-holdout'
+    - 'fold2-sirius'
+    - 'fold2-holdout'
+    - 'fold3-sirius'
+    - 'fold3-holdout'
+    - 'fold4-sirius'
+    - 'fold4-holdout'
+    - 'fold5-sirius'
+    - 'fold5-holdout'
+    - 'fold6-sirius'
+    - 'fold6-holdout'
+    - 'fold7-sirius'
+    - 'fold7-holdout'
+    - 'fold8-sirius'
+    - 'fold8-holdout'
+    - 'fold9-sirius'
+    - 'fold9-holdout'

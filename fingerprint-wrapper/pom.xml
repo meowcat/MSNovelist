@@ -1,0 +1,103 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>fingerprint-wrapper</groupId>
+	<artifactId>fingerprint-wrapper</artifactId>
+	<version>0.5.2</version>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<version>3.7.0</version>
+					<source>11</source>
+					<target>11</target>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4.1</version>
+				<configuration>
+					<!-- get all project dependencies -->
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<!-- MainClass in mainfest make a executable jar -->
+					<archive>
+						<manifest>
+							<mainClass>ch.moduled.fingerprintwrapper.FingerprintUtil</mainClass>
+						</manifest>
+					</archive>
+					<finalName>fingerprint-wrapper-bin-${project.version}</finalName>
+					<appendAssemblyId>false</appendAssemblyId>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<!-- bind to the packaging phase -->
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>de.unijena.bioinf.ms</groupId>
+			<artifactId>fingerprinter_oss</artifactId>
+			<version>1.4.3-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.lexicalscope.jewelcli</groupId>
+			<artifactId>jewelcli</artifactId>
+			<version>0.8.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-bundle</artifactId>
+			<version>2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openscience.cdk</groupId>
+			<artifactId>cdk-silent</artifactId>
+			<version>2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>de.unijena.bioinf.ms</groupId>
+			<artifactId>chemistry_base</artifactId>
+			<version>4.4.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+	      <groupId>me.tongfei</groupId>
+	      <artifactId>progressbar</artifactId>
+	      <version>0.8.1</version>
+  		</dependency>
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>bioinf-jena-rel</id>
+			<name>bioinf-jena-releases</name>
+			<url>https://bio.informatik.uni-jena.de/repository/libs-oss</url>
+		</repository>
+		<repository>
+			<id>bioinf-jena</id>
+			<name>bioinf-jena-releases-local</name>
+			<url>https://bio.informatik.uni-jena.de/repository/libs-release-local</url>
+		</repository>
+		<repository>
+			<id>XypronRelease</id>
+			<name>Xypron Release</name>
+			<url>https://www.xypron.de/repository</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+</project>

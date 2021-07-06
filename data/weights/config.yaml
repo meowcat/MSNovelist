@@ -1,0 +1,76 @@
+all_evaluation_sets:
+- fold0-casmi
+- fold0-sirius
+- fold0-holdout
+- fold1-sirius
+- fold1-holdout
+- fold2-sirius
+- fold2-holdout
+- fold3-sirius
+- fold3-holdout
+- fold4-sirius
+- fold4-holdout
+- fold5-sirius
+- fold5-holdout
+- fold6-sirius
+- fold6-holdout
+- fold7-sirius
+- fold7-holdout
+- fold8-sirius
+- fold8-holdout
+- fold9-sirius
+- fold9-holdout
+cv_fold: X
+cv_folds: 1
+decoder_config:
+  clip_invalid_counts: false
+  tokenization: tokens_process
+decoder_name: beam_search
+epochs: 30
+eval_detail: false
+eval_k: 128
+eval_kk: 128
+eval_n: 8
+eval_n_total: 126
+eval_steps: 128
+eval_temperature: 1.0
+eval_top_n: 1
+f1_cutoff: 0.5
+model_config:
+  loss_weights:
+    out_nhydrogen: 0.03
+    out_smiles: 1
+  use_auxiliary_counter: true
+  use_fingerprint: true
+  use_hydrogen_estimator: true
+model_tag: msnovelist-docker-weights
+pipeline_encoder:
+- fingerprint_selected
+- mol_form
+- n_hydrogen
+pipeline_reference:
+- smiles_canonical
+- fingerprint_degraded
+pipeline_x:
+- fingerprint_selected
+- mol_form
+- tokens_X
+pipeline_x_eval: []
+pipeline_y:
+- tokens_y
+- n_hydrogen
+preprocessing_preselect_limit: 1000000
+preprocessing_workers_preselect: 10
+preprocessing_workers_pubchem: 30
+sampler_config:
+  final_round: true
+  max_loop: 10
+  replace_true: 0
+sampler_name: fp_sampling.cv_sampler_direct
+steps_per_epoch: -1
+steps_per_epoch_validation: -1
+tensorflow_trace: false
+training_set: train
+training_verbose: 1
+validation_set: validate
+weights: w-20-0.040-0.038.hdf5

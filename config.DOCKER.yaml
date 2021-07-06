@@ -1,0 +1,16 @@
+base_folder: /msnovelist/
+db_path: ''
+fp_map: '/msnovelist/data/fingerprint-map/csi_fingerid.csv'
+hdf5_lock: "FALSE"
+weights_folder: /msnovelist-data/weights/
+eval_folder: /msnovelist-data/eval/
+log_folder: /msnovelist-data/tensorboard/
+sirius_bin: /usr/local/bin/sirius/bin/sirius
+fingerprinter_path: /usr/local/bin/fingerprint-wrapper/fingerprint-wrapper-bin-0.5.2.jar
+fingerprinter_threads: 10
+fingerprinter_cache: '/msnovelist-data/fingerprint-cache/fingerprint_cache.db'
+training_verbose: 1
+coverage_baseline: /msnovelist-data/coverage-baseline/baseline_sirius_top10_coverage_1604438836.pkl
+batch_size: 256
+rerank_sirius_results_n: 99999
+db_pubchem: /msnovelist-data/pubchem-ref/pubchem_ref.db
