@@ -2,6 +2,7 @@
 Michael A. Stravs (1), Kai Dührkop (2), Sebastian Böcker (2), Nicola Zamboni (1)
 
 1 Institute of Molecular Systems Biology, ETH Zürich, CH-8092 Zürich, Switzerland
+
 2 Institut für Informatik, Friedrich-Schiller-Universität Jena, D-07743 Jena, Germany
 
 stravs@imsb.biol.ethz.ch
