@@ -7,7 +7,7 @@ Michael A. Stravs (1), Kai Dührkop (2), Sebastian Böcker (2), Nicola Zamboni (
 
 stravs@imsb.biol.ethz.ch
 
-bioRxiv, submitted
+submitted, bioRxiv: https://www.biorxiv.org/content/10.1101/2021.07.06.450875v1
 
 ## Build docker
 
