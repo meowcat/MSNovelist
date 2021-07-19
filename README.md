@@ -13,6 +13,8 @@ submitted, bioRxiv: https://www.biorxiv.org/content/10.1101/2021.07.06.450875v1
 
 `docker build . -t msnovelist`
 
+Note: When building on Docker for Windows, ensure that repository was checked out with `core.autocrlf=false`.
+
 ## Predict de novo structure
 
 General:
@@ -29,8 +31,10 @@ General:
 * The used configuration file is deposited as `DATAFOLDER/msnovelist-config-RUNID.yaml`.
 * The MSNovelist results are stored in `$DATAFOLDER/results-RUNID/decode-RUNID.csv` and `.pkl`.
 
+
 Example:
 * `docker run -v "$(pwd)/sample-data":/msnovelist-data msnovelist predict.sh 377.mgf`
+* This reproduces the de novo predictions for feature 377 as described in the manuscript.
 * (If you don't want to pollute your repository, copy the sample data somewhere else first)
 
 ## Info
@@ -38,6 +42,9 @@ Example:
 * Order the results by `score_mod_platt`, descendingly, to get the top candidate (or filter by `rank_score_lim_mod_platt == 1`)
 * Multiple spectra (in an MGF file, MS file or SIRIUS project) can be processed in one run, the first column `query` in the result file indicates the spectrum associated with the result
 
+## System requirements
+
+A Docker system able to run Linux Docker containers is required. The Docker container contains all dependencies required to run the software. The container was built and tested on Docker 19.03.6, Ubuntu 18.04.4 LTS, with 16 GB RAM; Docker 19.03.8 on Ubuntu 20.04.2 LTS, with 32 GB RAM. The Docker image requires approx. 6.5 GB of disk space. Build time for the Docker container is up to 20 min. Runtime with demo data is <5 min. 
 
 
 
