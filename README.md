@@ -33,7 +33,7 @@ General:
 
 
 Example:
-* `docker run -v "$(pwd)/sample-data":/msnovelist-data msnovelist predict.sh 377.mgf`
+* `docker run -v "$(pwd)/sample-data":/msnovelist-data msnovelist predict.sh 377.mgf` (on Windows, specify full path without `"`)
 * This reproduces the de novo predictions for feature 377 as described in the manuscript.
 * (If you don't want to pollute your repository, copy the sample data somewhere else first)
 
@@ -44,7 +44,7 @@ Example:
 
 ## System requirements
 
-A Docker system able to run Linux Docker containers is required. The Docker container contains all dependencies required to run the software. The container was built and tested on Docker 19.03.6, Ubuntu 18.04.4 LTS, with 16 GB RAM; Docker 19.03.8 on Ubuntu 20.04.2 LTS, with 32 GB RAM. The Docker image requires approx. 6.5 GB of disk space. Build time for the Docker container is up to 20 min. Runtime with demo data is <5 min. 
+A Docker system able to run Linux Docker containers is required. The Docker container contains all dependencies required to run the software. The container was built and tested on Docker 19.03.6, Ubuntu 18.04.4 LTS, with 16 GB RAM; Docker 19.03.8 on Ubuntu 20.04.2 LTS, with 32 GB RAM; and Docker Desktop 2.3.0.4 (46911; engine 19.03.12) on Windows 10.0.10942 with 16 GB RAM. The Docker image requires approx. 6.5 GB of disk space. Build time for the Docker container is up to 20 min. Runtime with demo data is <5 min. 
 
 
 
