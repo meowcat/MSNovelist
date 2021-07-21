@@ -129,7 +129,12 @@ def smiles_pipeline(dataset,
                     unpack = True,
                     unpickle_mf = True,
                     embed_X = True,
+                    map_fingerprints = True,
                     **kwargs):
+    
+    if not map_fingerprints:
+        fp_map = None
+    
     smiles_canonical, smiles_generic = map(
         np.array,
         zip(*[
@@ -205,7 +210,7 @@ def smiles_pipeline(dataset,
         hinting
         )
     
-    # SELFIES processing
+    # Tokens processing
     dataset_tokens_X, dataset_tokens_y = xy_tokens_pipeline(
         dataset_batch_smiles_canonical, embed_X = embed_X)
     

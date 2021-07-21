@@ -326,7 +326,7 @@ class FpDatabaseHdf5(FpDatabase):
         super().__init__(db_file, None) 
         
         config_ = {
-            #'use_regex': False,
+            'use_regex': True,
             'fingerprints_degraded': None,
             'process_smiles': True
             }
@@ -334,7 +334,7 @@ class FpDatabaseHdf5(FpDatabase):
         self.config = config_
         self.fingerprinter = fpr.Fingerprinter.get_instance()
         self._load_hdf()
-        #self.use_regex = self.config['use_regex']
+        self.use_regex = self.config['use_regex']
 
     def _load_hdf(self):
         self.db = h5py.File(self.db_file, 'r')
@@ -342,7 +342,9 @@ class FpDatabaseHdf5(FpDatabase):
         self.db_degraded = None
         if self.config["fingerprints_degraded"] is not None:
             fp_deg = self.config["fingerprints_degraded"]
-            logger.info("Loading pre-sampled fingerprints from {fp_deg}")
+            logger.info(f"Loading pre-sampled fingerprints from {fp_deg} into fingerprints_degraded")
+            if "fingerprints_degraded" in self.db:
+                logger.warn("Overriding the provided fingerprints_degraded from the database")
             self.db_degraded = h5py.File(fp_deg, 'r')
         # Process SMILES to aromatic SMILES if specified
         if self.config["process_smiles"]:
@@ -365,7 +367,7 @@ class FpDatabaseHdf5(FpDatabase):
         mf = {
             k: max(1, int('0' + v)) for k, v in mf_raw.items()
             }
-        return mf
+        return Counter(mf)
         
     def get_grp(self, grp):
         '''
@@ -380,7 +382,11 @@ class FpDatabaseHdf5(FpDatabase):
 
         '''
         
-        grp_match = map(lambda s: s.startswith(grp), self.db["grp"])
+        if self.use_regex:
+            grp_match = map(lambda s: re.match(grp, s) is not None, self.db["grp"])
+        else:
+            grp_match = map(lambda s: s.startswith(grp), self.db["grp"])
+            
         grp_indices = np.where(np.array([x for x in grp_match]))[0]
         
         
@@ -392,6 +398,20 @@ class FpDatabaseHdf5(FpDatabase):
                         grp_indices,
                         self.db["fingerprints"][grp_indices],
                         self.db_degraded["fingerprints_degraded"][grp_indices],
+                        self.smiles_generic[grp_indices],
+                        self.smiles_canonical[grp_indices],
+                        self.db["inchikey"][grp_indices],
+                        self.db["inchikey1"][grp_indices],
+                        # for now we ignore that we have no processed molecules,
+                        self.mf[grp_indices],
+                        grp_indices)]
+        elif "fingerprints_degraded" in self.db:
+            return [
+                self._record_iter(x, grp)
+                for x in zip(
+                        grp_indices,
+                        self.db["fingerprints"][grp_indices],
+                        self.db["fingerprints_degraded"][grp_indices],
                         self.smiles_generic[grp_indices],
                         self.smiles_canonical[grp_indices],
                         self.db["inchikey"][grp_indices],
@@ -425,6 +445,12 @@ class FpDatabaseHdf5(FpDatabase):
             record_dict["grp"] = grp
         return record_dict
         
+    def get_pipeline_options(self):
+        
+        options = super().get_pipeline_options()
+        options['unpack'] = False
+        options['unpickle_mf'] = False
+        return options
 
 
 class FpDatabaseSqlite(FpDatabase):
@@ -432,10 +458,10 @@ class FpDatabaseSqlite(FpDatabase):
         super().__init__(db_file, None) 
         
         config_ = {
-            'use_regex': False
+            'use_regex': True
             }
         config_.update(config)
-        self.config = config
+        self.config = config_
         
         self.use_regex = self.config['use_regex']
         
@@ -626,7 +652,6 @@ def fp_database_pickle(db_file, config):
 class FpDatabaseCsv(FpDatabase):
     
     def __init__(self, db_file, config):
-        super().__init__(db_file, config)
         # Update the default config with the given config:
         config_ = {
             'fp_map': None,
@@ -637,6 +662,8 @@ class FpDatabaseCsv(FpDatabase):
             'scramble_fingerprints': False
             }
         config_.update(config)
+        super().__init__(db_file, config_)
+
         self._init_dispatch(config_['fp_map'],
                             config_['nrows'],
                             config_['construct_from'],
