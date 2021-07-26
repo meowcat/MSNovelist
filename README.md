@@ -13,6 +13,8 @@ bioRxiv, submitted
 
 `docker build . -t msnovelist`
 
+Alternatively, pull: `docker pull stravsm/msnovelist`. However, you should still clone the repository if you want to run the example (or just download 377.mgf), because the spectrum file needs to be mounted into the container "from outside". 
+
 ## Predict de novo structure
 
 General:
