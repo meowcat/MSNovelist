@@ -11,6 +11,7 @@ import spectrum_utils.spectrum as sus
 import processing
 import tempfile
 import matplotlib.pyplot as plt
+import pathlib
 
 import sys
 import os
@@ -18,6 +19,7 @@ import re
 sys.path.append(os.environ['MSNOVELIST_BASE'])
 
 import subprocess
+import time
 
 import smiles_config as sc
 
@@ -181,12 +183,60 @@ def main():
     if 'use_zodiac' in sirius_options['use_zodiac']:
         use_zodiac = ' zodiac '
     sirius_cli = f"formula {sirius_options['profile']} {sirius_options['cli']} {use_zodiac} structure -d ALL_BUT_INSILICO"
+    sirius_out = os.path.join(
+        sc.config['eval_folder'],
+        f"sirius-{sc.config['eval_id']}")
 
     with use_scope('output', clear = True):
             put_text("SIRIUS is processing")
             put_loading()
 
+    sirius_run = subprocess.Popen([
+        'sirius.sh',
+        "--log=warning",
+        f"-i {target_path}",
+        f"-o {sirius_out}",
+        sirius_cli
+        ])
 
+    clear("output")
+    output_sirius_progess = output(put_text("SIRIUS started"))
+    with use_scope('output'):
+        put_text("Calculating trees:")
+        put_processbar('prog_trees')
+        put_text("Predicting fingerprints:")
+        put_processbar('prog_fingerprints')
+        put_row([
+            output_sirius_progess,
+        ])
+
+    while(sirius_run.poll() is None):
+        sirius_path = pathlib.Path(sirius_out)
+        if sirius_path.exists():
+            sirius_spectra = [x for x in sirius_path.iterdir() if x.is_dir()]
+            sirius_trees_complete = sum([
+                (x / "trees").exists() for x in sirius_spectra
+            ])
+            sirius_fp_complete = sum([
+                (x / "fingerprints").exists() for x in sirius_spectra
+            ])
+            n_total = len(sirius_spectra)
+            set_processbar('prog_trees', float(sirius_trees_complete)/float(n_total))
+            set_processbar('prog_fingerprints', float(sirius_fp_complete)/float(n_total))
+            
+            #with use_scope('output'):
+            output_sirius_progess.reset(
+                put_text(f"total spectra: {n_total}, trees complete: {sirius_trees_complete}, fingerprints_complete: {sirius_fp_complete}")   
+            )
+
+        time.sleep(1)
+
+    with use_scope('output', clear = True):
+            put_text("SIRIUS is done")
+
+    
+
+    
     # put_select(
     #     name = 'pin_select_spectrum',
     #     label = "Choose spectrum",
@@ -225,9 +275,6 @@ def main():
     #             })],
     #             onclick = lambda _ : proceed() )
     #     #pin_wait_change('pin_select_spectrum')
-
-
-    put_text("Done")
 
 
 pywebio.start_server(main, port=int(8050), host = '0.0.0.0')
