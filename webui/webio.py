@@ -22,14 +22,18 @@ import smiles_config as sc
 def main():
     put_markdown("# MSNovelist web interface")
 
+    set_scope('input_scope', position = 0)
+    set_scope('output_scope', position = -1)
+
     # Upload and store spectra
-    spectra_upload = input_group("Spectra upload", inputs = [
-        file_upload(
-            label = "Select MGF file",
-            accept = ['.mgf'],
-            name = "spectra"
-        )
-    ])
+    with use_scope('input_scope', clear=True):
+        spectra_upload = input_group("Spectra upload", inputs = [
+            file_upload(
+                label = "Select MGF file",
+                accept = ['.mgf'],
+                name = "spectra"
+            )
+        ])
 
     target_path = os.path.join(
         sc.config['eval_folder'],
@@ -52,25 +56,50 @@ def main():
         spectrum_fig.add_subplot(sup.spectrum(spectra_vis[i])) 
         spectrum_fig.savefig(spectrum_temp_png)
         spectrum_img = open(spectrum_temp_png, 'rb').read()
-        with use_scope('shape', clear=True):
+        with use_scope('output_scope', clear=True):
             put_text(spectra_names[i])
             put_image(spectrum_img)
         #pin_wait_change('pin_select_spectrum')
 
+    with use_scope('input_scope', clear=True):
 
-    spectrum_sel = select(
-        label = "Choose spectrum",
-        options = [
-            {
-                'label': name,
-                'value': i,
-                'selected': i == 0
-            }
-            for i, name in enumerate(spectra_names)
-        ],
-        onchange = plot_spectrum
-    )
+        spectrum_sel = select(
+            label = "Choose spectrum",
+            options = [
+                {
+                    'label': name,
+                    'value': i,
+                    'selected': i == 0
+                }
+                for i, name in enumerate(spectra_names)
+            ],
+            onchange = plot_spectrum
+        )
 
+    clear('output_scope')
+    options_profile = [
+        {'label': 'Orbitrap', 'value': '-p orbitrap'},
+        {'label': 'Q-TOF', 'value': '-p qtof'},
+        {'label': 'custom (specify in CLI options)', 'value': ''}
+    ]
+
+    with use_scope('input_scope', clear = True):
+        sirius_options = input_group(
+            "SIRIUS options",
+            [
+                select('SIRIUS profile', options_profile, name='profile'),
+                checkbox('', [{'value': 'use_zodiac', 'label': 'Use ZODIAC'}], name = 'use_zodiac'),
+                input('Custom CLI options for formula', name='cli')
+            ]
+        )
+
+    use_zodiac = ''
+    if 'use_zodiac' in sirius_options['use_zodiac']:
+        use_zodiac = ' zodiac '
+    sirius_cli = f"formula {sirius_options['profile']} {sirius_options['cli']} {use_zodiac} structure -d ALL_BUT_INSILICO"
+
+    clear('input_scope')
+    put_text(sirius_cli)
 
     # put_select(
     #     name = 'pin_select_spectrum',
