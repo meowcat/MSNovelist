@@ -14,7 +14,10 @@ import matplotlib.pyplot as plt
 
 import sys
 import os
+import re
 sys.path.append(os.environ['MSNOVELIST_BASE'])
+
+import subprocess
 
 import smiles_config as sc
 
@@ -43,11 +46,15 @@ def main():
     with open(target_path, "wb") as f:
         f.write(spectra_upload["spectra"]["content"])
 
+
     # Visualize spectra
     spectra_ = mgf.read(target_path)
     spectra = [s for s in spectra_]
     spectra_vis = [processing.get_su_spectrum(s) for s in spectra]
     spectra_names = [s['params']['title'] for s in spectra]
+    spectra_process = [True for s in spectra]
+
+    # Review spectra settings
 
     def plot_spectrum(i):
         tf, spectrum_temp_png = tempfile.mkstemp(suffix = ".png")
@@ -56,50 +63,129 @@ def main():
         spectrum_fig.add_subplot(sup.spectrum(spectra_vis[i])) 
         spectrum_fig.savefig(spectrum_temp_png)
         spectrum_img = open(spectrum_temp_png, 'rb').read()
-        with use_scope('output_scope', clear=True):
-            put_text(spectra_names[i])
-            put_image(spectrum_img)
+        return spectrum_img
         #pin_wait_change('pin_select_spectrum')
 
-    with use_scope('input_scope', clear=True):
+    def render_spectra_table():
 
-        spectrum_sel = select(
-            label = "Choose spectrum",
-            options = [
-                {
-                    'label': name,
-                    'value': i,
-                    'selected': i == 0
-                }
-                for i, name in enumerate(spectra_names)
-            ],
-            onchange = plot_spectrum
+        spectra_edit_table = [['\u2612', 'name', 'm/z', 'formula', '']]
+        for i, s in enumerate(spectra):
+            selected = spectra_process[i]
+            char_selected = '\u2610'
+            if(selected):
+                char_selected = '\u2612'
+            name = s['params']['title']
+            mol_form = s['params'].get('formula')
+            use_formula =  mol_form is not None
+            mz = s['params']['pepmass'][0]
+            spectra_edit_table.append([
+                char_selected,
+                name,
+                mz,
+                mol_form or '',
+                put_buttons([{'label': 'edit', 'value': f'edit_{i}'}], onclick = lambda v : edit_spectrum(v))
+            ])
+        return spectra_edit_table
+
+    def edit_spectrum(v):
+        m = re.match('edit_([0-9]+)', v)
+        i = int(m.group(1))
+        print(f"clicked {i}")
+        s = spectra[i]
+        name = s['params']['title']
+        mol_form = s['params'].get('formula')
+        use_formula =  mol_form is not None
+        spectrum_img = plot_spectrum(i)
+        # popup(spectra[i]['params']['title'],
+
+        #     [
+        #         put_image(spectrum_img),
+        #         put_buttons(['close'],onclick=lambda _: close_popup())
+        #     ]
+        # )
+        with use_scope('output', clear=True):
+            put_markdown(f'## {name}')
+            put_image(spectrum_img)
+        spectra_edited = input_group('Settings', [
+            checkbox(name,
+                [{'label': 'process', 'value': 'process', 'selected': spectra_process[i]},
+                {'label': 'use fixed formula', 'value': 'use_mf', 'selected': use_formula}],
+                name= f'spectrum_options'),
+            input('Formula', 
+                value = mol_form or '',
+                name = f'spectrum_mf')
+        ])
+        print(f"edited spectrum {i}")
+
+        if('use_mf' in spectra_edited['spectrum_options']):
+            spectra[i]['params']['formula'] = spectra_edited['spectrum_mf']
+        else:
+            spectra[i]['params'].pop('formula', None)
+        spectra_process[i] = 'process' in spectra_edited['spectrum_options']
+
+        with use_scope('output', clear = True):
+            put_loading()
+        spectra_table = render_spectra_table()
+        with use_scope('output', clear=True):
+            put_table(
+                spectra_table
+            )
+
+
+    with use_scope('output', clear = True):
+            put_loading()
+    spectra_table = render_spectra_table()
+    with use_scope('output', clear=True):
+        put_markdown("## Spectra selection and configuration")
+        put_table(
+            spectra_table
         )
 
-    clear('output_scope')
+    actions('Continue to SIRIUS settings', ['proceed'])
+
+    spectra_edit_inputs = []
+    for i, s in enumerate(spectra):
+        name = s['params']['title']
+        mol_form = s['params'].get('formula')
+        use_formula =  mol_form is not None
+        spectra_edit_inputs.extend([
+            checkbox(name,
+                [{'label': 'process', 'value': 'process'},
+                {'label': 'use fixed formula', 'value': 'use_mf', 'selected': use_formula}],
+                name= f'spectrum_options_{i}'),
+            input('Formula', 
+                value = mol_form or '',
+                name = f'spectrum_mf_{i}'),
+        ])
+
+    put_markdown("## SIRIUS settings")
+
     options_profile = [
         {'label': 'Orbitrap', 'value': '-p orbitrap'},
         {'label': 'Q-TOF', 'value': '-p qtof'},
         {'label': 'custom (specify in CLI options)', 'value': ''}
     ]
 
-    with use_scope('input_scope', clear = True):
-        sirius_options = input_group(
-            "SIRIUS options",
-            [
-                select('SIRIUS profile', options_profile, name='profile'),
-                checkbox('', [{'value': 'use_zodiac', 'label': 'Use ZODIAC'}], name = 'use_zodiac'),
-                input('Custom CLI options for formula', name='cli')
-            ]
-        )
+    clear('output')
+    #with use_scope('input_scope', clear = True):
+    sirius_options = input_group(
+        "SIRIUS options",
+        [
+            select('SIRIUS profile', options_profile, name='profile'),
+            checkbox('', [{'value': 'use_zodiac', 'label': 'Use ZODIAC'}], name = 'use_zodiac'),
+            input('Custom CLI options for formula', name='cli')
+        ]
+    )
 
     use_zodiac = ''
     if 'use_zodiac' in sirius_options['use_zodiac']:
         use_zodiac = ' zodiac '
     sirius_cli = f"formula {sirius_options['profile']} {sirius_options['cli']} {use_zodiac} structure -d ALL_BUT_INSILICO"
 
-    clear('input_scope')
-    put_text(sirius_cli)
+    with use_scope('output', clear = True):
+            put_text("SIRIUS is processing")
+            put_loading()
+
 
     # put_select(
     #     name = 'pin_select_spectrum',
