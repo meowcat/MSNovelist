@@ -46,12 +46,9 @@ def smi2svg(smi, width, height):
     svg = drawer.GetDrawingText().replace('svg:','')
     return svg.encode('utf-8')
 
-def main():
+def visualize(results_file):
 
-    put_markdown("# MSNovelist web interface")
-    
-    results = "/msnovelist-data/1631365775/decode_1631365775-0.pkl"
-    results = pickle.load(open(results, 'rb'))
+    results = pickle.load(open(results_file, 'rb'))
 
     results["mf_text"] = [rdMolDescriptors.CalcMolFormula(m) for m in tqdm(results["mol"])]
     results["mz"] = [rdMolDescriptors.CalcExactMolWt(m) + 1.0072 for m in tqdm(results["mol"])]
@@ -128,4 +125,3 @@ def main():
 
     session.hold()
 
-pywebio.start_server(main, port=int(8050), host = '0.0.0.0')

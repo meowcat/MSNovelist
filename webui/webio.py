@@ -3,6 +3,9 @@ from pywebio import *
 from pywebio.input import *
 from pywebio.output import *
 from pywebio.pin import *
+from pywebio import session
+
+import webio_vis
 
 from pyteomics import mgf
 import spectrum_utils.plot as sup
@@ -314,7 +317,11 @@ def main():
     with use_scope('output', clear = True):
             put_text("MSNovelist is done")
 
+    msnovelist_results = pathlib.Path(eval_folder) / f"decode_{eval_id}-0.pkl"
 
+    webio_vis.visualize(msnovelist_results)
+
+    session.hold()
 
 
     # put_select(
