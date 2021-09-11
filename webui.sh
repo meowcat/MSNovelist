@@ -26,10 +26,7 @@ yq e 'del(.eval_folder)' -i /msnovelist-data/msnovelist-config-$RUNID.yaml
 # Note: check how yq deals with $, could be done directly above
 echo "eval_id: '$RUNID'" >> /msnovelist-data/msnovelist-config-$RUNID.yaml
 echo "eval_counter: '0'" >> /msnovelist-data/msnovelist-config-$RUNID.yaml
-echo "eval_folder: '/msnovelist-data/results-$RUNID/'" >> /msnovelist-data/msnovelist-config-$RUNID.yaml
-echo "webui_results: '/msnovelist-data/results-1627313808/decode_1627313808-0.pkl'" >> /msnovelist-data/msnovelist-config-$RUNID.yaml
-
-
+echo "eval_folder: '/msnovelist-data/'" >> /msnovelist-data/msnovelist-config-$RUNID.yaml
 
 if [[ -f "/msnovelist-data/fingerprint_cache.db" ]]
 then

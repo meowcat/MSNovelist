@@ -33,6 +33,7 @@ import smiles_config as sc
 import infrastructure.generator as gen
 import infrastructure.decoder as dec
 
+from pathlib import Path
 
 
 
@@ -74,7 +75,7 @@ if sc.config['eval_counter'] != '':
 weights = sc.config['weights_folder'] + sc.config['weights']
 picklepath = sc.config["eval_folder"] + "decode_" + pickle_id + ".pkl"
 csv_path = sc.config["eval_folder"] + "decode_" + pickle_id + ".csv"
-
+filelog_path = sc.config["eval_folder"] + "filelog_" + pickle_id
 
 k = sc.config["eval_k"]
 kk = sc.config["eval_kk"]
@@ -88,7 +89,10 @@ pipeline_reference = sc.config['pipeline_reference']
 
 decoder_name = sc.config["decoder_name"]
 
-
+# Should signal files be written to log progress?
+output_filelog = "filelog" in sc.config
+if output_filelog:
+    os.mkdir(filelog_path)
 
 # # Load dataset
 # fp_db  = db.FpDatabase(sc.config['db_path'])
@@ -244,11 +248,16 @@ for i, query in enumerate(tqdm(queries)):
     results_ok["m"] = i
     results.append(results_ok)
 
+    if output_filelog:
+        (Path(filelog_path) / f'predict_{i}').write_text("")
+ 
 logger.info(f"Processing {m} queries - fingerprinting results")
 results_processed_ = []
-for result in tqdm(results):
+for i, result in enumerate(tqdm(results)):
     result_processed = fingerprinter.process_df(result)
     results_processed_.append(result_processed)
+    if output_filelog:
+        (Path(filelog_path) / f'fingerprint_{i}').write_text("")
 
 logger.info(f"Processing {m} queries - merging")
 results_processed = pd.concat(results_processed_)
@@ -267,6 +276,11 @@ del(results_processed_)
 
 results_scores = msc.compute_candidate_scores(results_copy, fp_map, additive_smoothing_n = 5000)
 results_scores["score_decoder"] = results_scores["score"]
+
+if output_filelog:
+    (Path(filelog_path) / f'scores').write_text("")
+
+
 
 scores = msc.get_candidate_scores()
 scores["score_decoder"] = 0

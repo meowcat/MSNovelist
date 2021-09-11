@@ -25,10 +25,17 @@ import smiles_config as sc
 
 
 def main():
+    
+    eval_id = int(time.time())
+    eval_folder = pathlib.Path(sc.config['eval_folder']) / str(eval_id)
+    os.mkdir(eval_folder)
+
     put_markdown("# MSNovelist web interface")
+    put_markdown(f"Running at {eval_folder}")
 
     set_scope('input_scope', position = 0)
     set_scope('output_scope', position = -1)
+
 
     # Upload and store spectra
     with use_scope('input_scope', clear=True):
@@ -41,7 +48,7 @@ def main():
         ])
 
     target_path = os.path.join(
-        sc.config['eval_folder'],
+        eval_folder,
         'spectra.mgf'
     )
 
@@ -184,8 +191,8 @@ def main():
         use_zodiac = ' zodiac '
     sirius_cli = f"formula {sirius_options['profile']} {sirius_options['cli']} {use_zodiac} structure -d ALL_BUT_INSILICO"
     sirius_out = os.path.join(
-        sc.config['eval_folder'],
-        f"sirius-{sc.config['eval_id']}")
+        eval_folder,
+        f"sirius-{eval_id}")
 
     with use_scope('output', clear = True):
             put_text("SIRIUS is processing")
@@ -235,8 +242,81 @@ def main():
             put_text("SIRIUS is done")
 
     
+    sirius_path = pathlib.Path(sirius_out)
+    sirius_spectra = [x for x in sirius_path.iterdir() if x.is_dir()]
+    sirius_trees_complete = sum([
+        (x / "trees").exists() for x in sirius_spectra
+    ])
+    sirius_fp_complete = sum([
+        (x / "fingerprints").exists() for x in sirius_spectra
+    ])
+
+    sirius_results_config = os.path.join(eval_folder, f"sirius-results-{eval_id}.yaml")
+    with open(sirius_results_config, 'w') as f:
+        f.writelines([
+            f'eval_folder: {eval_folder}/\n',
+            f'eval_id: "{eval_id}"\n',
+            f'sirius_project_input: "{sirius_out}"\n',
+            'filelog: True\n'
+        ])
+
+    put_markdown("## MSNovelist settings")
+    put_text(f"Fingerprints for {sirius_fp_complete} out of {n_total} spectra successfully predicted.")
+    msnovelist_settings = input_group(
+        'MSNovelist settings',
+        [checkbox('', [{'label': "Compare to database results", 'value': 'compare_db' }], name = "settings")]
+    )
+
+
+    msnovelist_run = subprocess.Popen([
+        'python',
+        '/msnovelist/decode_applied.py',
+        '-c',
+	    '/msnovelist/data/weights/config.yaml',
+        f"/msnovelist-data/msnovelist-config-{sc.config['eval_id']}.yaml",
+        sirius_results_config
+        ],
+        cwd = "/msnovelist")
+
+    clear("output")
+    output_msnovelist_progess = output(put_text("MSNovelist started"))
+    with use_scope('output'):
+        put_text("Predicting structures:")
+        put_processbar('prog_msnovelist_predict')
+        put_text("Calculating fingerprints:")
+        put_processbar('prog_msnovelist_fingerprints')
+        put_text("Scoring:")
+        put_processbar('prog_msnovelist_score')
+        put_row([
+            output_msnovelist_progess,
+        ])
 
     
+
+    while(msnovelist_run.poll() is None):
+        filelog_path = pathlib.Path(eval_folder) / f"filelog_{eval_id}-0"
+        if filelog_path.exists():
+            filelog_predicted = len([x for x in filelog_path.iterdir() if x.name.startswith('predict')])
+            filelog_fp = len([x for x in filelog_path.iterdir() if x.name.startswith('fingerprint')])
+            filelog_score = len([x for x in filelog_path.iterdir() if x.name.startswith('score')])
+
+            n_total = len(sirius_spectra)
+            set_processbar('prog_msnovelist_predict', float(filelog_predicted)/float(sirius_fp_complete))
+            set_processbar('prog_msnovelist_fingerprints', float(filelog_fp)/float(sirius_fp_complete))
+            set_processbar('prog_msnovelist_score', float(filelog_score)/1)
+
+            #with use_scope('output'):
+            output_msnovelist_progess.reset(
+                put_text(f"total spectra: {n_total}, predictions complete: {filelog_predicted}, fingerprints_complete: {filelog_fp}")   
+            )
+        time.sleep(1)
+
+    with use_scope('output', clear = True):
+            put_text("MSNovelist is done")
+
+
+
+
     # put_select(
     #     name = 'pin_select_spectrum',
     #     label = "Choose spectrum",
