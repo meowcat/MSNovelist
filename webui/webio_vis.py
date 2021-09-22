@@ -50,11 +50,21 @@ def visualize(results_file):
 
     results = pickle.load(open(results_file, 'rb'))
 
+    mol_stack = {}
+
     results["mf_text"] = [rdMolDescriptors.CalcMolFormula(m) for m in tqdm(results["mol"])]
     results["mz"] = [rdMolDescriptors.CalcExactMolWt(m) + 1.0072 for m in tqdm(results["mol"])]
     results["legend"] = list(map(
         lambda x: "{inchikey1}, m/z {mz:.4f}".format(**x[1]), 
         results.iterrows()))
+
+    def mol_popup(name):
+        popup(
+            name,
+            [
+                put_image(Draw.MolToImage(mol_stack[name], size = (mol_width, mol_height))),
+            ]
+            )
 
     def table_topresults(score, mf):
 
@@ -78,6 +88,9 @@ def visualize(results_file):
                 [span(put_markdown(f"**{query}**"), col = 5)]
             )
             for i, table_row in table_block.iterrows():
+
+                mol_stack[table_row["inchikey1"]] = table_row["mol"]
+
                 output_row = [
                     table_row['mf_text'],
                     table_row['legend'],
@@ -86,7 +99,10 @@ def visualize(results_file):
                         put_image(
                             Draw.MolToImage(table_row["mol"], size = (mol_width, mol_height))
                         ),
-                        put_buttons(['view'], onclick = lambda x : print('1'), small = True, link_style = True)
+                        put_buttons(
+                            [{'label': 'view', 'value': table_row["inchikey1"]}], 
+                            onclick = lambda inchikey : mol_popup(inchikey), 
+                            small = True, link_style = True)
                     ]),
                     table_row['smiles'],
                 ]
@@ -123,5 +139,5 @@ def visualize(results_file):
     put_table(table_results,
         header = ['formula', 'info', 'score', 'molecule', 'smiles'])
 
-    session.hold()
+    
 

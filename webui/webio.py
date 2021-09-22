@@ -155,20 +155,15 @@ def main():
 
     actions('Continue to SIRIUS settings', ['proceed'])
 
-    spectra_edit_inputs = []
-    for i, s in enumerate(spectra):
-        name = s['params']['title']
-        mol_form = s['params'].get('formula')
-        use_formula =  mol_form is not None
-        spectra_edit_inputs.extend([
-            checkbox(name,
-                [{'label': 'process', 'value': 'process'},
-                {'label': 'use fixed formula', 'value': 'use_mf', 'selected': use_formula}],
-                name= f'spectrum_options_{i}'),
-            input('Formula', 
-                value = mol_form or '',
-                name = f'spectrum_mf_{i}'),
-        ])
+    edited_spectra_path = os.path.join(
+        eval_folder,
+        'spectra-edited.mgf'
+    )
+
+    # Filter spectra to include only the ones with process = True,
+    # and store the modified spectra
+    edited_spectra = [spectrum for spectrum, spectrum_process in zip(spectra, spectra_process) if spectrum_process]
+    mgf.write(edited_spectra, edited_spectra_path)
 
     put_markdown("## SIRIUS settings")
 
@@ -204,7 +199,7 @@ def main():
     sirius_run = subprocess.Popen([
         'sirius.sh',
         "--log=warning",
-        f"-i {target_path}",
+        f"-i {edited_spectra_path}",
         f"-o {sirius_out}",
         sirius_cli
         ])
@@ -236,7 +231,7 @@ def main():
             
             #with use_scope('output'):
             output_sirius_progess.reset(
-                put_text(f"total spectra: {n_total}, trees complete: {sirius_trees_complete}, fingerprints_complete: {sirius_fp_complete}")   
+                put_text(f"total spectra: {n_total}, trees complete: {sirius_trees_complete}, fingerprints complete: {sirius_fp_complete}")   
             )
 
         time.sleep(1)
@@ -267,7 +262,10 @@ def main():
     put_text(f"Fingerprints for {sirius_fp_complete} out of {n_total} spectra successfully predicted.")
     msnovelist_settings = input_group(
         'MSNovelist settings',
-        [checkbox('', [{'label': "Compare to database results", 'value': 'compare_db' }], name = "settings")]
+        [
+            #checkbox('', [{'label': "Compare to database results", 'value': 'compare_db' }], name = "settings")
+            checkbox('', [{'label': "Dummy checkbox", 'value': 'compare_db' }], name = "settings")
+        ]
     )
 
 
@@ -310,7 +308,7 @@ def main():
 
             #with use_scope('output'):
             output_msnovelist_progess.reset(
-                put_text(f"total spectra: {n_total}, predictions complete: {filelog_predicted}, fingerprints_complete: {filelog_fp}")   
+                put_text(f"total spectra: {n_total}, predictions complete: {filelog_predicted}, fingerprints complete: {filelog_fp}")   
             )
         time.sleep(1)
 
@@ -318,7 +316,15 @@ def main():
             put_text("MSNovelist is done")
 
     msnovelist_results = pathlib.Path(eval_folder) / f"decode_{eval_id}-0.pkl"
-
+    msnovelist_results_csv = pathlib.Path(eval_folder) / f"decode_{eval_id}-0.csv"
+    with open(msnovelist_results_csv, 'rb') as f:
+        msnovelist_results_csv_data = f.read()
+    
+    put_file(
+        msnovelist_results_csv.name,
+        msnovelist_results_csv_data,
+        "Download results (CSV)")
+    
     webio_vis.visualize(msnovelist_results)
 
     session.hold()
