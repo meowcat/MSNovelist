@@ -11,7 +11,7 @@ COPY msnovelist-env.yml /
 RUN /opt/conda/bin/conda env create -f /msnovelist-env.yml
 
 RUN apt-get -qq update && \
-	apt-get -q install unzip &&  \
+	apt-get -qq -y install unzip sqlite &&  \
 	wget -q https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.4.29/sirius-4.4.29-linux64-headless.zip && \
 	unzip -d /usr/local/bin -q sirius-4.4.29-linux64-headless.zip && \
 	mkdir -p /root/.sirius
