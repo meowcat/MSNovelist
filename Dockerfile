@@ -28,6 +28,7 @@ COPY predict.sh /usr/local/bin
 COPY --from=fingerprint-wrapper-build /usr/src/fingerprint-wrapper/target /usr/local/bin/fingerprint-wrapper
 
 RUN echo conda activate msnovelist-env >> /root/.bashrc && \
-	echo export COMPUTERNAME=DOCKER >> /root/.bashrc
+	echo export COMPUTERNAME=DOCKER >> /root/.bashrc && \
+	chmod 777 /msnovelist
 
 WORKDIR /msnovelist

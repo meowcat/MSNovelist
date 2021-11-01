@@ -60,7 +60,7 @@ if sc.config['eval_id'] != '':
 if sc.config['eval_counter'] != '':
     pickle_id = sc.config['eval_id'] + "-" + sc.config['eval_counter']
 picklepath_all = sc.config["eval_folder"] + f"baseline_sirius_top{top_n}_" + pickle_id + ".pkl"
-picklepath_coverage = sc.config["eval_folder"] + f"baseline_sirius_top{top_n}_coverage_" + pickle_id + ".pkl"
+picklepath_coverage = sc.config["eval_folder"] + f"coverage_baseline_sirius_top{top_n}_" + pickle_id + ".pkl"
 
 
 

@@ -4,7 +4,14 @@ export COMPUTERNAME=DOCKER-LIGHT
 export MSNOVELIST_BASE=/msnovelist
 export TF_CPP_MIN_LOG_LEVEL=3
 
-SIRIUS_SETTINGS=${2:-"formula -p qtof structure -d ALL_BUT_INSILICO"}
+
+if [[ "$NAMING" != "" ]]
+then
+	NAMING_ARG="--naming-convention=$NAMING"
+fi
+
+SIRIUS_SETTINGS=${2:-"${NAMING_ARG} formula -p qtof structure -d ALL_BUT_INSILICO"}
+#SIRIUS_SETTINGS=${2:-"formula -p qtof structure"}
 # EXPORT_DB_BASE=0
 
 eval "$(conda shell.bash hook)"
@@ -25,7 +32,7 @@ chown $USER /msnovelist-data/msnovelist-config-$RUNID.yaml
 # If this is a file with spectra: process with SIRIUS and use resulting path as input path for MSNovelist
 if [[ ! -d "/msnovelist-data/$1" ]]
 then
-	sirius.sh --log=WARNING -i "/msnovelist-data/$1" -o "/msnovelist-data/sirius-$RUNID" $SIRIUS_SETTINGS
+	HOME=/tmp sirius.sh --log=WARNING -i "/msnovelist-data/$1" -o "/msnovelist-data/sirius-$RUNID" $SIRIUS_SETTINGS
 	chown -R $USER /msnovelist-data/sirius-$RUNID
 	echo "sirius_project_input: /msnovelist-data/sirius-$RUNID" >> /msnovelist-data/msnovelist-config-$RUNID.yaml
 # Otherwise use input directory as input path for MSNovelist
