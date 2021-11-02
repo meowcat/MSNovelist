@@ -65,6 +65,8 @@ logger = logging.getLogger("MSNovelist")
 logger.setLevel(logging.INFO)
 logger.info("decode_applied startup")
 
+tf.get_logger().setLevel('ERROR')
+
 
 eval_id = str(int(time.time()))
 pickle_id = eval_id
