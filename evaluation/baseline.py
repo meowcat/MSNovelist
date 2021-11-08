@@ -26,9 +26,16 @@ import fp_management.fingerprint_map as fpm
 import fp_management.database as db
 import random
 
+
 import pickle
 import pandas as pd
 import numpy as np
+
+random_seed = sc.config['random_seed_global']
+if random_seed != '':
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    # This never uses any TF randomness, so no need to initialize that
 
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors

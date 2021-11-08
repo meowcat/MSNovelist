@@ -31,7 +31,14 @@ lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 import infrastructure.score as msc
 import gc
+import random
 
+# Randomness is relevant for stochastic sampling
+random_seed = sc.config['random_seed_global']
+if random_seed != '':
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    tf.random.experimental.set_seed(random_seed)
 
 # Setup logger
 import logging

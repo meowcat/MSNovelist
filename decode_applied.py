@@ -25,6 +25,7 @@ import os
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import random
 
 from fp_management import database as db
 from fp_management import fingerprinting as fpr
@@ -35,7 +36,12 @@ import infrastructure.decoder as dec
 
 from pathlib import Path
 
-
+# Randomness is relevant in the (rare) case of using stochastic sampling
+random_seed = sc.config['random_seed_global']
+if random_seed != '':
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    tf.random.experimental.set_seed(random_seed)
 
 project_path = sc.config['sirius_project_input']
 queries = [f for f in os.scandir(project_path) if f.is_dir()]

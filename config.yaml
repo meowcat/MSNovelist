@@ -55,6 +55,7 @@ reinforcement_eval_start: -1
 reinforcement_eval_count: -1
 eval_temperature: 1.0
 decoder_name: 'beam_search'
+random_seed_global: ''
 all_evaluation_sets:
     - 'fold0-casmi'
     - 'fold0-sirius'
