@@ -30,7 +30,7 @@ class EvaluationLogger:
             f"eval_{self.eval_id}_{self.path_base}_{key}.txt")
         return logpath_        
         
-    def append_csv(self, key, data):
+    def append_csv(self, key, data, remove_cols = ['mol_ref', 'fingerprint_ref_true', 'fingerprint_ref']):
         path = self.csvpath(key)
         data_store = data.copy()
         data_store.reset_index(inplace=True)
@@ -40,6 +40,11 @@ class EvaluationLogger:
         data_store.insert(0, "weights", self.config["weights"])
         data_store.insert(0, "model_tag", self.config["model_tag"])
         data_store.insert(0, "sampler_name", self.config["sampler_name"])
+        
+        for col in remove_cols:
+            if col in data_store.columns:
+                del data_store[col]
+
         try:
             data_append = pd.read_csv(path)
             data_append = data_append.append(data_store)
