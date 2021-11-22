@@ -103,8 +103,8 @@ for i, query in enumerate(tqdm(queries)):
     results_path = [x for x in results_path if '.tsv' in x]
     results_mf = [path.split("_")[0] for path in results_path]
     rerank_n = sc.config['rerank_sirius_results_n']
-    results_ref_ = [pd.read_csv(os.path.join(results_path_, x), sep="\t").iloc[:rerank_n].assign(mf_text=mf)
-                   for x, mf in zip(results_path, results_mf)]
+    results_ref_ = [pd.read_csv(os.path.join(results_path_, x), sep="\t").assign(mf_text = mf) for x, mf in zip(results_path, results_mf)]
+    results_ref_ = [x.loc[lambda row: row['rank'] <= rerank_n] for x in results_ref_]
     results_ref = pd.concat(results_ref_).assign(query = query_name)
     results_ref = db.process_df(results_ref, fingerprinter, construct_from="smiles")    
     results_ref = fingerprinter.process_df(results_ref, in_column = "smiles_canonical")

@@ -16,22 +16,21 @@ RUN wget -q https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_am
 
 COPY . /msnovelist
 
+#RUN apt-get -qq update && \
+#	apt-get -qq -y install unzip sqlite &&  \
+#	unzip -d /usr/local/bin -q /msnovelist/sirius_bin/sirius-linux64-headless-4.4.29.zip && \
+#	mkdir -p /root/.sirius && \
+#	rm -r /msnovelist/sirius_bin
+
 RUN apt-get -qq update && \
-	apt-get -qq -y install unzip sqlite &&  \
-	unzip -d /usr/local/bin -q /msnovelist/sirius_bin/sirius-linux64-headless-4.4.29.zip && \
-	mkdir -p /root/.sirius && \
-	rm -r /msnovelist/sirius_bin
-
-# RUN apt-get -qq update && \
-# 	apt-get -qq -y install unzip sqlite &&  \
-# 	wget -q https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.4.29/sirius-4.4.29-linux64-headless.zip && \
-# 	unzip -d /usr/local/bin -q sirius-4.4.29-linux64-headless.zip && \
-# 	mkdir -p /root/.sirius
+ 	apt-get -qq -y install unzip sqlite &&  \
+ 	wget -q https://github.com/boecker-lab/sirius/releases/download/post-4.0.1/sirius-linux64-headless-4.4.29.zip && \
+ 	unzip -d /usr/local/bin -q sirius-linux64-headless-4.4.29.zip && \
+ 	mkdir -p /root/.sirius
 
 
 
-COPY sirius.sh /usr/local/bin
-COPY predict.sh /usr/local/bin
+COPY *.sh /usr/local/bin/
 
 COPY --from=fingerprint-wrapper-build /usr/src/fingerprint-wrapper/target /usr/local/bin/fingerprint-wrapper
 

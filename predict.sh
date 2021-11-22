@@ -38,6 +38,7 @@ then
 # Otherwise use input directory as input path for MSNovelist
 else
 	echo "sirius_project_input: /msnovelist-data/$1" >> /msnovelist-data/msnovelist-config-$RUNID.yaml
+	chown -R $USER /msnovelist-data/$1
 fi
 
 # Write new eval_id into config file

@@ -12,7 +12,7 @@ fingerprinter_cache: '/msnovelist-data/fingerprint_cache.db'
 training_verbose: 1
 coverage_baseline: ''
 batch_size: 256
-rerank_sirius_results_n: 99999
+rerank_sirius_results_n: 64
 db_pubchem: /msnovelist/data/pubchem-dummy/pubchem_ref_dummy.db
 db_path_eval:
     path: /msnovelist/data/minimal-dataset/minimal_dataset.csv
