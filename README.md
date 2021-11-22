@@ -18,15 +18,18 @@ To install Docker on Windows, Linux, or Mac, follow the instructions on https://
 
 Notes:
 * Docker on Windows can be installed either with WSL2 or with the HyperV backend (two different ways of running a virtual Linux). Today, WSL2 is typically used 
-MSNovelist works with both methods. If you chose to install HyperV backend, **select Linux containers, not Windows containers**. 
+MSNovelist works with both methods. 
+  * If you choose to install HyperV backend, **select Linux containers, not Windows containers**. 
   * If you select HyperV backend, you have to allocate a specified amount of maximal RAM and CPU to Docker; for WSL, the allocation is dynamic.
 * For Linux, you can typically use your distribution's package manager.
 * We have tested *MSNovelist* on Linux and Windows. There is no reason why it should not work on Mac, however this is currently untested.
 
 After verifying that you have a running Docker installation, pull the latest MSNovelist container:
+
 `docker pull stravsm/msnovelist` 
+
 Alternatively, you can build the container yourself. For this, checkout the Git repository or 
-(download the zipped repository)[https://github.com/meowcat/MSNovelist/archive/refs/heads/master.zip]
+[download the zipped repository](https://github.com/meowcat/MSNovelist/archive/refs/heads/master.zip)
 From the repository (the directory containing `Dockerfile`), run `docker build -t msnovelist .` No dependencies except 
 for Docker itself are required. If you build the container on Windows, make sure that the Git repository was checked
 out with `core.autocrlf=false`.
@@ -76,7 +79,10 @@ Example:
 
 ## System requirements
 
-A Docker system able to run Linux Docker containers is required. The Docker container contains all dependencies required to run the software. The container was built and tested on Docker 19.03.6, Ubuntu 18.04.4 LTS, with 16 GB RAM; Docker 19.03.8 on Ubuntu 20.04.2 LTS, with 32 GB RAM; and Docker Desktop 2.3.0.4 (46911; engine 19.03.12) on Windows 10.0.10942 with 16 GB RAM. The Docker image requires approx. 6.5 GB of disk space. Build time for the Docker container is up to 20 min. Runtime with demo data is <5 min. 
+See above: A Docker system able to run Linux Docker containers is required. The Docker container contains all dependencies required to run the software. 
+The container was built and tested on Docker 19.03.6, Ubuntu 18.04.4 LTS, with 16 GB RAM; Docker 19.03.8 on Ubuntu 20.04.2 LTS, with 32 GB RAM; 
+ Docker Desktop 2.3.0.4 (46911; engine 19.03.12) on Windows 10.0.10942 with 16 GB RAM; and Docker Desktop 4.1.1 (engine v20.10.8) on Windows 10 20H2 (19042.2037).
+  The Docker image requires approx. 6.5 GB of disk space.  Build time for the Docker container is up to 20 min. Runtime with a single spectrum is <5 min; for 
 
 
 

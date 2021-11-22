@@ -170,6 +170,7 @@ def main():
     options_profile = [
         {'label': 'Orbitrap', 'value': '-p orbitrap'},
         {'label': 'Q-TOF', 'value': '-p qtof'},
+        {'label': 'Q-TOF (20 ppm MS2)', 'value': '-p qtof --ppm-max-ms2=20'},
         {'label': 'custom (specify in CLI options)', 'value': ''}
     ]
 
