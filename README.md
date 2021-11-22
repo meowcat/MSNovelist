@@ -30,9 +30,10 @@ After verifying that you have a running Docker installation, pull the latest MSN
 
 Alternatively, you can build the container yourself. For this, checkout the Git repository or 
 [download the zipped repository](https://github.com/meowcat/MSNovelist/archive/refs/heads/master.zip)
-From the repository (the directory containing `Dockerfile`), run `docker build -t msnovelist .` No dependencies except 
-for Docker itself are required. If you build the container on Windows, make sure that the Git repository was checked
-out with `core.autocrlf=false`.
+From the repository (the directory containing `Dockerfile`), run `docker build -t msnovelist .`
+
+ No dependencies except  for Docker itself are required. If you build the container on Windows, 
+ make sure that the Git repository was checked out with `core.autocrlf=false` (or use the zip file).
 
 MSNovelist can be run as a command-line tool or with a simple Web interface (see below).
 
@@ -82,7 +83,8 @@ Example:
 See above: A Docker system able to run Linux Docker containers is required. The Docker container contains all dependencies required to run the software. 
 The container was built and tested on Docker 19.03.6, Ubuntu 18.04.4 LTS, with 16 GB RAM; Docker 19.03.8 on Ubuntu 20.04.2 LTS, with 32 GB RAM; 
  Docker Desktop 2.3.0.4 (46911; engine 19.03.12) on Windows 10.0.10942 with 16 GB RAM; and Docker Desktop 4.1.1 (engine v20.10.8) on Windows 10 20H2 (19042.2037).
-  The Docker image requires approx. 6.5 GB of disk space.  Build time for the Docker container is up to 20 min. Runtime with a single spectrum is <5 min; for 
+  The Docker image requires approx. 6.5 GB of disk space.  Build time for the Docker container is up to 20 min. Runtime with a single spectrum is <5 min; 
+  for 50 spectra, approx. 30 min on a laptop with 4 cores; / 32GB RAM; for the complete bryophyte dataset, approx. 2:30 h on a machine with 4 cores / 32 GB RAM.
 
 
 
