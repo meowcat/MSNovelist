@@ -4,11 +4,13 @@ COPY fingerprint-wrapper /usr/src/fingerprint-wrapper
 WORKDIR /usr/src/fingerprint-wrapper
 RUN mvn clean install
 
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:4.10.3
 
 COPY msnovelist-env.yml /
 
-RUN /opt/conda/bin/conda env create -f /msnovelist-env.yml
+RUN /opt/conda/bin/conda config --set remote_connect_timeout_secs 40 && \
+    /opt/conda/bin/conda config --set remote_read_timeout_secs 100 && \
+    /opt/conda/bin/conda env create -f /msnovelist-env.yml
 
 # install yq for better modification of config files
 RUN wget -q https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64.tar.gz -O - |\

@@ -13,7 +13,7 @@ submitted, bioRxiv: https://www.biorxiv.org/content/10.1101/2021.07.06.450875v1
 
 `docker build . -t msnovelist`
 
-Note: When building on Docker for Windows, ensure that repository was checked out with `core.autocrlf=false`.
+Alternatively, pull: `docker pull stravsm/msnovelist`. However, you should still clone the repository if you want to run the example (or just download 377.mgf), because the spectrum file needs to be mounted into the container "from outside". 
 
 ## Predict de novo structure
 
