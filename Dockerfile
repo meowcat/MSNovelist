@@ -38,6 +38,8 @@ COPY --from=fingerprint-wrapper-build /usr/src/fingerprint-wrapper/target /usr/l
 
 RUN echo conda activate msnovelist-env >> /root/.bashrc && \
 	echo export COMPUTERNAME=DOCKER >> /root/.bashrc && \
-	chmod 777 /msnovelist
+	chmod 777 /msnovelist && \
+	mkdir /msnovelist-data && \
+	chmod 777 /msnovelist-data
 
 WORKDIR /msnovelist
