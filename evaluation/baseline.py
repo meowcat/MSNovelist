@@ -91,8 +91,10 @@ evaluation_set = f"fold{cv_fold}-{evaluation_set_}"
 training_set = f"fold[^{cv_fold}]"
 
 dataset_val = db_eval.get_grp(evaluation_set)
-dataset_val = dataset_val[:n_total_]
-
+if n_total != -1:
+    dataset_val = dataset_val[:n_total]
+else:
+    n_total = len(dataset_val)
 
 # Get the training set
 data_train_ = sc.config["db_path_train"]
