@@ -9,7 +9,9 @@ stravs@imsb.biol.ethz.ch
 
 submitted, bioRxiv: https://www.biorxiv.org/content/10.1101/2021.07.06.450875v1
 
-## Build docker
+## Installation and use
+
+For end-user use, MSNovelist is provided as a Docker container. This requires a working Docker installation on a Linux or Windows system. On the other hand, no other dependencies are required; all required software and libraries are 
 
 `docker build . -t msnovelist`
 
