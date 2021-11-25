@@ -11,13 +11,40 @@ submitted, bioRxiv: https://www.biorxiv.org/content/10.1101/2021.07.06.450875v1
 
 ## Installation and use
 
-For end-user use, MSNovelist is provided as a Docker container. This requires a working Docker installation on a Linux or Windows system. On the other hand, no other dependencies are required; all required software and libraries are 
+*MSNovelist* is provided as a Docker container for end users. This requires a working Docker installation on Windows or Linux; on the other hand, no other dependencies
+ are required, the Docker container packages all required software and data.
+ 
+To install Docker on Windows, Linux, or Mac, follow the instructions on https://docs.docker.com/get-docker/. 
 
-`docker build . -t msnovelist`
+Notes:
+* Docker on Windows can be installed either with WSL2 or with the HyperV backend (two different ways of running a virtual Linux). Today, WSL2 is typically used 
+MSNovelist works with both methods. If you chose to install HyperV backend, **select Linux containers, not Windows containers**. 
+  * If you select HyperV backend, you have to allocate a specified amount of maximal RAM and CPU to Docker; for WSL, the allocation is dynamic.
+* For Linux, you can typically use your distribution's package manager.
+* We have tested *MSNovelist* on Linux and Windows. There is no reason why it should not work on Mac, however this is currently untested.
 
-Note: When building on Docker for Windows, ensure that repository was checked out with `core.autocrlf=false`.
+After verifying that you have a running Docker installation, pull the latest MSNovelist container:
+`docker pull stravsm/msnovelist` 
+Alternatively, you can build the container yourself. For this, checkout the Git repository or 
+(download the zipped repository)[https://github.com/meowcat/MSNovelist/archive/refs/heads/master.zip]
+From the repository (the directory containing `Dockerfile`), run `docker build -t msnovelist .` No dependencies except 
+for Docker itself are required. If you build the container on Windows, make sure that the Git repository was checked
+out with `core.autocrlf=false`.
 
-## Predict de novo structure
+MSNovelist can be run as a command-line tool or with a simple Web interface (see below).
+
+## Run web UI
+
+* Ensure you have a running Docker system.
+* Open a command line: Powershell (on Windows) or Bash (on Linux)
+* Run `docker run -it --init -p 8050:8050 stravsm/msnovelist webui.sh`
+  * Or if you want to use your own built image:  `docker run -it --init -p 8050:8050 msnovelist webui.sh`
+* Access MSNovelist WebUI on http://localhost:8050
+* To terminate the webserver, press Ctrl-C in the shell window.
+* To run the server in the background instead: `docker run -d -p 8050:8050 stravsm/msnovelist webui.sh`
+  * This server keeps running until you stop it using `docker kill` with the docker ID found with `docker ps`.
+  
+## Command line interface: Predict de novo structure
 
 General:
 
@@ -28,6 +55,7 @@ General:
 * A `RUNID` (based on the timestamp when running the script) identifies the processing results.
 * The SIRIUS results are stored in `DATAFOLDER/sirius-RUNID` and used as input for MSNovelist.
 * If `SPECTRA` is a **folder**, it is assumed to be a pre-processed SIRIUS 4.4.29 workspace and used directly as input for MSNovelist
+  * Note: This is SIRIUS 4.4.29 and not the current SIRIUS version - so you cannot use data processed with the current SIRIUS version.
 * MSNovelist is then run. 
 * If a fingerprint cache exists in `DATAFOLDER/fingerprint_cache.db`, it is used, otherwise a new cache is created at this path
 * The used configuration file is deposited as `DATAFOLDER/msnovelist-config-RUNID.yaml`.
@@ -35,9 +63,11 @@ General:
 
 
 Example:
-* `docker run -v "$(pwd)/sample-data":/msnovelist-data msnovelist predict.sh 377.mgf` (on Windows, specify full path without `"`)
-* This reproduces the de novo predictions for feature 377 as described in the manuscript.
-* (If you don't want to pollute your repository, copy the sample data somewhere else first)
+* Download `377.mgf` from the directory `sample-data` of this repository.
+* In the directory with `377.mgf`, run `docker run --init -v "$(pwd)":/msnovelist-data msnovelist predict.sh 377.mgf` 
+  * (on Windows in Powershell, use `${pwd}` instead. Alternatively, on either Win or Linux, use the full path.)
+* This reproduces the de novo predictions for feature 377 as described in the manuscript. This should work with as little as 4GB of RAM.
+* A larger example is `bryophytes.mgf`, the complete bryophyte dataset (576 total spectra). For this, at least 16GB of RAM are suggested. Runtime is approx. 2h on a laptop with 4 cores.
 
 ## Info
 
