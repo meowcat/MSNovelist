@@ -9,6 +9,12 @@ stravs@imsb.biol.ethz.ch
 
 submitted, bioRxiv: https://www.biorxiv.org/content/10.1101/2021.07.06.450875v1
 
+# 27.2.2023 Backend is down
+
+At the moment the CSI:FingerID service backing MSNovelist is **down**. We will need to retrain the model for the new service version, which will unfortunately take a while.
+
+Sorry for the inconvenience.
+
 ## Installation and use
 
 *MSNovelist* is provided as a Docker container for end users. This requires a working Docker installation on Windows or Linux; on the other hand, no other dependencies
