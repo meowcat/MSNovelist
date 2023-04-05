@@ -23,7 +23,6 @@ h5_crossval = h5py.File(db_crossval, mode='r')
 h5_train = h5py.File(db_train, mode='r')
 
 PROCESSING_BLOCK_SIZE=40000
-PROCESSING_BLOCK_MAX_COUNT=9999999999
 
 
 # inchikeys_crossval = h5_crossval["inchikeys"]
@@ -39,33 +38,36 @@ PROCESSING_BLOCK_MAX_COUNT=9999999999
 
 fingerprinter = fp.Fingerprinter(sc.config['fingerprinter_path'])
 
-def try_fp_item(smiles_generic, smiles_canonical, fp):
+def try_fp_item(smiles_generic, smiles_canonical, fp_true, fp_predicted):
     try:
         item = db.FpItem.fromSiriusFp(
             smiles_generic = smiles_generic,
             smiles_canonical = smiles_canonical,
-            fp = fp,
+            fp = fp_true,
             source = "dataset",
             grp = "fold0",
             b64 = False
         )
+        item.fp_degraded = fp_predicted
     except:
         item = None
     return item
 
 def db_item_block(block):
     smiles = [i[0] for i in block]
-    fp = [i[1] for i in block]
+    fp_true = [i[1] for i in block]
+    fp_predicted =  [i[2] for i in block]
     smiles_proc = fingerprinter.process(smiles, calc_fingerprint=False)
-    item = zip(smiles_proc, fp)
-    fp_items_ = [try_fp_item(s['smiles_generic'], s['smiles_canonical'], fp)
-                 for s, fp in item ]
+    item = zip(smiles_proc, fp_true, fp_predicted)
+    fp_items_ = [try_fp_item(s['smiles_generic'], s['smiles_canonical'], fp_true, fp_predicted)
+                 for s, fp_true, fp_predicted in item ]
     fp_items = [x for x in fp_items_ if x is not None]
     return fp_items
 
 data_in = zip(
-     h5_train["smiles"],
-     h5_train["csiTruth"]
+     h5_crossval["smiles"],
+     h5_crossval["csiTruth"],
+     h5_crossval["csiPredicted"],
 )
 
 
@@ -76,20 +78,16 @@ print(f"database: {db_new}")
 
 fp_db = db.FpDatabase.load_from_config(db_new)
 block = take(PROCESSING_BLOCK_SIZE, data_in)
-processed_blocks = 0
-while (len(block) > 0) and (processed_blocks < PROCESSING_BLOCK_MAX_COUNT):
-    print(f"Processing block {processed_blocks}")
+while len(block) > 0:
     data_proc = db_item_block(block)
     fp_db.insert_fp_multiple(data_proc)
     #print(f"last inserted id: {inserted_id}")
     block = take(PROCESSING_BLOCK_SIZE, data_in)
-    processed_blocks = processed_blocks + 1
-
 
 print(f"database: {db_new} written")
 
-with open('/target/log.yaml', 'r+') as f:
-    f.write(f'db_step1: {db_new}')
+with open('/target/log.yaml', "r+") as f:
+    f.write(f'db_step2: {db_new}')
 # data_proc = [db_item(smiles, fp) for smiles, fp in take(100, data_in)]
 # fp_db.insert_fp_multiple(data_proc)
 
