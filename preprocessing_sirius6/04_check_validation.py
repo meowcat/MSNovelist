@@ -40,6 +40,5 @@ with open(invalid_file, "w") as f:
 
 print(f"Invalid entries: {len(id_invalid)}")
 
-q = f"UPDATE compounds SET grp = 'invalid' id, smiles_canonical FROM compounds LIMIT {PROCESSING_BLOCK_MAX_COUNT}"
 
 
