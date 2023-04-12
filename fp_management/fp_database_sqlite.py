@@ -10,6 +10,7 @@ import sqlite3
 from sqlite3 import Error
 from .fp_database import *
 import re
+import pandas as pd
 
 
 def regexp(expr, item):
@@ -17,7 +18,7 @@ def regexp(expr, item):
     return reg.search(item) is not None
 
 class FpDatabaseSqlite(FpDatabase):
-    def __init__(self, db_file, config):
+    def __init__(self, db_file, config, random_seed = 44):
         super().__init__(db_file, None) 
         
         config_ = {
@@ -30,6 +31,50 @@ class FpDatabaseSqlite(FpDatabase):
         
         self._create_connection(db_file)
         self._create_schema()
+
+        if self.config.get('extract_sampler_data', False):
+
+            # Build the information for the fingerprint sampler
+            q = f"SELECT grp || '-' || id as id, inchikey1 as inchikey, smiles_canonical, fingerprint, fingerprint_degraded from compounds"
+            res = self.sql(q)
+            df = pd.DataFrame.from_records(res)
+            df.columns = ['id', 'inchikey', 'smiles', 'fingerprint', 'fingerprint_degraded']
+            self.data_information = df
+            self.data_information.set_index("id", inplace=True)
+            fp_map = self.config['fp_map']
+            self.fp_map = fpm.FingerprintMap(fp_map)
+            
+            self.random_seed = random_seed
+
+
+            data_fp_true = np.stack([np.frombuffer(x, dtype=np.uint8) for x in df.fingerprint])
+            data_fp_predicted = np.stack([np.frombuffer(x, dtype=np.float32) for x in df.fingerprint_degraded])
+
+            self.fp_len = data_fp_true.shape[1]
+            self.fp_real_len = int(max(self.fp_map.positions)+1)
+
+            # Reshape predicted 3541 FP into the full 7593 bit FP
+            data_fp_full = np.zeros((data_fp_predicted.shape[0],
+                                    self.fp_real_len))
+            data_fp_full[:,self.fp_map.positions] = data_fp_predicted
+            # data_fp_realigned = np.array([
+            #     fpr.realign_fp_numpy(i) for i in list(data_fp_full)])
+            self.data_fp_predicted = data_fp_full
+            # Reshape true 3541 FP into the full 7593 bit FP
+            data_fp_full = np.zeros((data_fp_true.shape[0],
+                                    self.fp_real_len))
+            data_fp_full[:,self.fp_map.positions] = data_fp_true
+            # data_fp_realigned = np.array([
+            #     fpr.realign_fp_numpy(i) for i in list(data_fp_full)])
+            self.data_fp_true = data_fp_full
+            
+            
+            self.data_information["perm_order"] = 0
+            self.data_information["source"] = ''
+            self.data_information["grp"] = ''
+            self.data_information["row_id"] = np.arange(
+                len(self.data_information), dtype="int32")
+
     
     SCHEMA_DEF = {
             'compounds' :
