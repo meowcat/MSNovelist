@@ -23,17 +23,17 @@ for fp_db_ in databases:
 
     fp_db = db.FpDatabase.load_from_config(fp_db_)
     fp_db_invalid_ = fp_db_ + ".invalid_ids"
-    with open(fp_db_invalid_, 'r') as f:
+
+    with fp_db._db_con as con, open(fp_db_invalid_, 'r') as f:
+        
         fp_db_invalid = [x.strip('\n') for x in f]
 
-    q = "UPDATE compounds SET grp = 'invalid' WHERE id = ?"
-    cur = fp_db._db_con.cursor()
+        q = "UPDATE compounds SET grp = 'invalid' WHERE id = ?"
+        cur = con.cursor()
 
-    for id in tqdm(fp_db_invalid):
-        cur.execute(q, [id])
-        print(f"{fp_db_}: set invalid id {id}, rows: {cur.rowcount}")
-    #cur.commit()
+        for id in tqdm(fp_db_invalid):
+            cur.execute(q, [id])
+            #print(f"{fp_db_}: set invalid id {id}, rows: {cur.rowcount}")
+    
 
 
-
-#fp_db.randomize()
