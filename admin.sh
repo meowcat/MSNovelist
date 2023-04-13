@@ -13,7 +13,7 @@ case $1 in
         docker exec -uroot -it $DOCKER_ID bash
         ;;   
     build)
-        docker build -f Dockerfile.sirius6 . -t stravsm/msnovelist6
+        docker build -f Dockerfile.cuda . -t stravsm/msnovelist6
         ;;
     push)
         docker push stravsm/msnovelist6
