@@ -94,10 +94,10 @@ sc.config_dump(config_dump_path)
 # Load mapping table for the CSI:FingerID predictors
 
 fp_map = fpm.FingerprintMap(sc.config["fp_map"])
-fpr.Fingerprinter.init_instance(sc.config['fingerprinter_path'],
-                                  sc.config['fingerprinter_threads'],
-                                  capture = False)
-fingerprinter = fpr.Fingerprinter.get_instance()
+# fpr.Fingerprinter.init_instance(sc.config['fingerprinter_path'],
+#                                   sc.config['fingerprinter_threads'],
+#                                   capture = False)
+# fingerprinter = fpr.Fingerprinter.get_instance()
 
 logger.info(f"Datasets - loading database")
 fp_db  = db.FpDatabase.load_from_config(sc.config['db_path_train'])
