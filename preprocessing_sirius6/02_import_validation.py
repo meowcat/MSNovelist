@@ -24,18 +24,6 @@ h5_train = h5py.File(db_train, mode='r')
 
 PROCESSING_BLOCK_SIZE=40000
 
-
-# inchikeys_crossval = h5_crossval["inchikeys"]
-# inchikeys_train = h5_train["inchikey"]
-#inchikeys_crossval_set = set(inchikeys_crossval)
-#inchikeys_train_set = set(inchikeys_train)
-
-#inchikeys_exclude = [k in inchikeys_crossval_set for k in tqdm(inchikeys_train)]
-
-#con = sqlite3.connect(db_old)
-#con_su = su.Database(db_old)
-
-
 fingerprinter = fp.Fingerprinter(sc.config['fingerprinter_path'])
 
 def try_fp_item(smiles_generic, smiles_canonical, fp_true, fp_predicted):
@@ -88,69 +76,3 @@ print(f"database: {db_new} written")
 
 with open('/target/log.yaml', "r+") as f:
     f.write(f'db_step2: {db_new}')
-# data_proc = [db_item(smiles, fp) for smiles, fp in take(100, data_in)]
-# fp_db.insert_fp_multiple(data_proc)
-
-
-
-
-
-
-# def fp_iter(f):
-#     with open(f) as h:
-#         fp_reader = csv.reader(h, delimiter='\t')
-#         for row in fp_reader:
-#             try:
-#                 fp = db.FpItem.fromSiriusFp(smiles_generic = row[0],
-#                                             smiles_canonical = row[1],
-#                                             fp = row[2])
-#                 yield(fp)
-#             except:
-#                 pass
-
-
-# INSERT_BLOCK = 5000
-
-# import itertools
-# def take(n, iterable): return list(itertools.islice(iterable, n))
-
-# MOL_DB_PATH='/sirius6-db/sirius6.db'
-# start = time.time()
-# fp_db = db.FpDatabase.load_from_config(MOL_DB_PATH)
-# fp_cnt = fp_count(MOL_FP_PATH)
-# fp_it = fp_iter(MOL_FP_PATH)
-
-# n_blocks = fp_cnt // INSERT_BLOCK
-# logger.info(f"Inserting into DB, block size {INSERT_BLOCK}, block count {n_blocks}")
-
-# insert_done = False
-# for i in tqdm(range(n_blocks + 2)):
-#         fp_block = take(INSERT_BLOCK, fp_it)
-#         #print("Inserting...", flush=True)
-#         fp_db.insert_fp_multiple(fp_block)
-#         if len(fp_block) == 0:
-#             insert_done = True
-            
-# logger.info(f"Insert finished, result: {insert_done}")
-
-# dtime = time.time() - start
-# logger.info(f"Done in {dtime} seconds")
-# fp_db.close()
-
-
-# schema_cpds = '''
-# CREATE TABLE compounds (
-#     id INTEGER PRIMARY KEY,
-#     fingerprint BLOB, 
-#     fingerprint_degraded BLOB, 
-#     smiles_generic CHAR(128), 
-#     smiles_canonical CHAR(128),
-#     inchikey CHAR(27), 
-#     inchikey1 CHAR(14), 
-#     mol BLOB, 
-#     mf BLOB, 
-#     mf_text CHAR(128), 
-#     source CHAR(128), 
-#     grp CHAR(128), 
-#     perm_order INT )
-# '''
