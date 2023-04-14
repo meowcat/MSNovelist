@@ -49,5 +49,5 @@ COPY --chown=${MAMBA_USER}:${MAMBA_USER} . /msnovelist
 # Finally switch back to MAMBA_USER
 USER $MAMBA_USER
 
-ENTRYPOINT ["/msnovelist/_entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
 WORKDIR /msnovelist
