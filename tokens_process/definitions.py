@@ -20,7 +20,9 @@ import itertools
 
 # The dictionary below was obtained from the cococoh dataset
 # converted to selfies, then sf.get_alphabet_from_selfies
-VOC = ['O',
+VOC = [
+ '?'
+ 'O',
  '=',
  'C',
  '1',
