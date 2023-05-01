@@ -1,12 +1,12 @@
 base_folder: /msnovelist/
 db_path: ''
-fp_map: '/msnovelist/data/fingerprint-map/csi_fingerid.csv'
+fp_map: '/contrib/fingerprinter_cli/csi_fingerid.tsv'
 hdf5_lock: "FALSE"
 weights_folder: /msnovelist/data/weights/
 eval_folder: /msnovelist-data/results/
 log_folder: /msnovelist-data/tensorboard/
 sirius_bin: /usr/local/bin/sirius/bin/sirius
-fingerprinter_path: /usr/local/bin/fingerprint-wrapper/fingerprint-wrapper-bin-0.5.2.jar
+fingerprinter_path: /contrib/fingerprinter_cli/bin
 fingerprinter_threads: 10
 fingerprinter_cache: '/msnovelist-data/fingerprint_cache.db'
 training_verbose: 1

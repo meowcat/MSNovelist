@@ -1,0 +1,61 @@
+# bring in the micromamba image so we can copy files from it
+FROM mambaorg/micromamba:1.4.2 as micromamba
+
+FROM nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04
+
+RUN apt-get -qq update && \
+	apt-get -qq -y install --no-install-recommends \
+        unzip sqlite sqlite3 wget curl libxrender-dev libxext-dev \
+        openjdk-17-jdk-headless
+
+RUN wget -q https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64.tar.gz -O - |\
+  tar xz && mv yq_linux_amd64 /usr/bin/yq
+
+# if your image defaults to a non-root user, then you may want to make the
+# next 3 ARG commands match the values in your image. You can get the values
+# by running: docker run --rm -it my/image id -a
+ARG MAMBA_USER=mamba
+ARG MAMBA_USER_ID=1000
+ARG MAMBA_USER_GID=1000
+ENV MAMBA_USER=$MAMBA_USER
+ENV MAMBA_ROOT_PREFIX="/opt/conda"
+ENV MAMBA_EXE="/bin/micromamba"
+
+COPY --from=micromamba "$MAMBA_EXE" "$MAMBA_EXE"
+COPY --from=micromamba /usr/local/bin/_activate_current_env.sh /usr/local/bin/_activate_current_env.sh
+COPY --from=micromamba /usr/local/bin/_dockerfile_shell.sh /usr/local/bin/_dockerfile_shell.sh
+COPY --from=micromamba /usr/local/bin/_entrypoint.sh /usr/local/bin/_entrypoint.sh
+COPY --from=micromamba /usr/local/bin/_activate_current_env.sh /usr/local/bin/_activate_current_env.sh
+COPY --from=micromamba /usr/local/bin/_dockerfile_initialize_user_accounts.sh /usr/local/bin/_dockerfile_initialize_user_accounts.sh
+COPY --from=micromamba /usr/local/bin/_dockerfile_setup_root_prefix.sh /usr/local/bin/_dockerfile_setup_root_prefix.sh
+
+RUN /usr/local/bin/_dockerfile_initialize_user_accounts.sh && \
+    /usr/local/bin/_dockerfile_setup_root_prefix.sh
+
+# Copy the conda env separately and build immediately, so a change in /msnovelist doesn't invalidate the build cache
+COPY --chown=${MAMBA_USER}:${MAMBA_USER} msnovelist-env.yml /tmp/msnovelist-env.yml
+
+USER $MAMBA_USER
+SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
+RUN micromamba install -y -n base -f /tmp/msnovelist-env.yml && \
+    micromamba clean --all --yes 
+
+# Now copy the entire code
+USER root
+COPY *.sh /usr/local/bin/
+RUN	mkdir /msnovelist-data && \
+    chown $MAMBA_USER:$MAMBA_USER /msnovelist-data && \
+ 	chmod 777 /msnovelist-data
+COPY --chown=${MAMBA_USER}:${MAMBA_USER} . /msnovelist
+
+RUN mkdir /contrib && cd /contrib && \
+    wget -q https://drive.switch.ch/index.php/s/lcCzNog2JRoELRc/download && \
+    unzip download && rm download &&  \
+    chmod 755 fingerprinter_cli/bin/* && \
+    apt-get -y install vim
+
+# Finally switch back to MAMBA_USER
+USER $MAMBA_USER
+
+ENTRYPOINT ["/usr/local/bin/_entrypoint.sh"]
+WORKDIR /msnovelist
