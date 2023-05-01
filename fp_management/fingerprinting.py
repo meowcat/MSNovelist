@@ -16,21 +16,18 @@ import sqlite3
 from sqlite3 import Error
 import pickle
 from warnings import warn
+import subprocess
+import pathlib
 
 
-try:
-    import jpype as jp
-    _java_enabled = True
-except:
-    _java_enabled = False
-    
+
+
+
 class Fingerprinter:
     @classmethod
     def shutdown():
-        jp.shutdownJVM()
+        pass
     
-    instance = None
-
     @classmethod
     def get_instance(cls):
         if cls.instance is None:
@@ -38,35 +35,18 @@ class Fingerprinter:
         return cls.instance
     
     @classmethod
-    def init_instance(cls, lib_path, threads=1, capture=True, cache = None):
-        cls.instance = cls(lib_path, threads, capture, cache)
+    def init_instance(cls, lib_path, fp_map,  threads=1, capture=True, cache = None):
+        cls.instance = cls(lib_path, fp_map, threads, capture, cache)
     
-    def __init__(self, lib_path, threads = 1, capture = True, cache = None):
+    def __init__(self, lib_path, fp_map, threads = 1, capture = True, cache = None,
+                 ):
         self.threads = threads
-        java_mem = sc.config['java_memory']
-        option_xmx = f"-Xmx{java_mem}m"
-        option_xms = f"-Xms{java_mem}m"
-        if not jp.isJVMStarted():
-            jp.startJVM(jp.getDefaultJVMPath(), 
-                        option_xmx, option_xms, "-Djava.class.path="+lib_path,
-                        convertStrings = True)
-        fpu = jp.JClass('ch.moduled.fingerprintwrapper.FingerprintUtil').instance
-        self.n_fingerprinters = fpu.makeFingerprinters(2*threads)
-        # Setup logging from Java
-        self.capture = capture
-        if capture:
-            mystream = jp.JProxy("ch.moduled.fingerprintwrapper.IPythonPipe", inst=sys.stdout)
-            errstream = jp.JProxy("ch.moduled.fingerprintwrapper.IPythonPipe", inst=sys.stderr)
-            outputstream = jp.JClass("ch.moduled.fingerprintwrapper.PythonOutputStream")()
-            outputstream.setPythonStdout(mystream)
-            ps = jp.JClass("java.io.PrintStream")
-            err_stream = jp.JClass("ch.moduled.fingerprintwrapper.PythonOutputStream")()
-            err_stream.setPythonStdout(errstream)
-            jp.java.lang.System.setOut(ps(outputstream, True))
-            jp.java.lang.System.setErr(ps(err_stream, True))
+        self.lib_path = lib_path
+        self.fingerprinter_bin = pathlib.Path(lib_path) / "fingerprinter_cli"
+        self.smiles_normalizer_bin = pathlib.Path(lib_path) / "smiles_normalizer"
+        self.fp_map = fp_map
+        self.fp_len = np.max(self.fp_map.subset_positions)
 
-        self.fpu = fpu
-        
         self.cache_path = cache
         self.cache = None
         self.cache_connect()
@@ -205,32 +185,64 @@ class Fingerprinter:
         res : TYPE
             DESCRIPTION.
 
-        '''        
-        res = self.fpu.processSmilesFromPython(
-            smiles,
-            self.threads,
-            calc_fingerprint,
-            return_b64,
-            self.capture
-            )
-        if calc_fingerprint:
-            res = [{
-                "data_id": entry[0],
-                "smiles_generic": entry[1],
-                "smiles_canonical": entry[2],
-                "fingerprint": entry[3]
-                } for entry in res]
-        else:
-            res = [{
-                "data_id": entry[0],
-                "smiles_generic": entry[1],
-                "smiles_canonical": entry[2],
-                } for entry in res]
-        res.sort(key=lambda x: x["data_id"])
-        return res
-    def fingerprint_file(self, cores, file_in, file_out):
-        self.fpu.process(file_in, file_out, cores)
+        '''
+        smiles_stdin = '\n'.join(smiles)
 
+        res_smiles  = subprocess.run(
+            [ self.smiles_normalizer_bin ],
+            input=smiles_stdin.encode('UTF-8'),
+            capture_output=True,
+            check=False
+        )
+        smiles_out = res_smiles.stdout.decode('UTF-8').rstrip('\n').split('\n')
+        
+        def parse_line(id, line):
+            line_ = line.split('t')
+            if line[0] == "OK":
+                return {
+                    'data_id': id,
+                    'smiles_generic': line[1],
+                    'smiles_canonical': line[2]
+                }
+            return {
+                'data_id': id,
+                'smiles_generic': "",
+                'smiles_canonical': ""
+            }
+
+        smiles_parsed = [parse_line(id, line) for id, line in enumerate(smiles_out)]
+        id_ok = [x["data_id"] for x in smiles_parsed]
+        smiles_ok = [smiles[x] for x in id_ok]
+        
+        if calc_fingerprint:
+
+            smiles_fp_stdin = '\n'.join(smiles_ok)
+
+            res_fp  = subprocess.run(
+                [ self.fingerprinter_bin ],
+                input = smiles_fp_stdin.encode('UTF-8'),
+                capture_output=True,
+                check=False
+            )
+
+            def parse_fp(line):
+                fp_bits = line.strip('\n').split('\t')
+                fp_bits_num_ = [int(x) for x in fp_bits]
+                fp_bits_num = [x for x in fp_bits_num_ if x <  self.fp_len]
+                fp = np.zeros((self.fp_len,))
+                fp[fp_bits_num] = 1
+                return fp
+
+            fp_out = res_fp.stdout.decode('UTF-8').rstrip('\n').split('\n')
+            fp_by_id = { id: parse_fp(line) for id, line in zip(id_ok, fp_out) }
+
+            for item in smiles_parsed:
+                item['fingerprint'] = fp_by_id[item["data_id"]]
+
+        return smiles_parsed
+    
+    def fingerprint_file(self, cores, file_in, file_out):
+        raise NotImplementedError("This function was not yet implemented for the S6 fingerprinter.")
 
 # B64-decodes one fingerprint
 def get_fp(fp, length = 8925, b64decode = True):

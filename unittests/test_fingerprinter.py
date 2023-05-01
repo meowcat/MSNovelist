@@ -27,10 +27,13 @@ class FingerprintingTest(unittest.TestCase):
     def setUp(self):
         self.cache = tempfile.mkstemp(suffix = '.db')
         os.close(self.cache[0])
-        fpr.Fingerprinter.init_instance(sc.config['fingerprinter_path'],
-                                          sc.config['fingerprinter_threads'],
-                                          capture = True,
-                                          cache = self.cache[1])
+        self.fp_map = fpm.FingerprintMap(sc.config['fp_map'])
+        fpr.Fingerprinter.init_instance(
+            sc.config['fingerprinter_path'],
+            self.fp_map,
+            sc.config['fingerprinter_threads'],
+            capture = True,
+            cache = self.cache[1])
         self.fingerprinter = fpr.Fingerprinter.get_instance()
         self.smi_CHE = "CN1CC2=C(C=CC3=C2OCO3)C4C1C5=CC6=C(C=C5CC4O)OCO6"
         
@@ -130,7 +133,7 @@ class FingerprintingTest(unittest.TestCase):
         f = self.fingerprinter.process([smi_CHE])
         fp = fpr.get_fp(f[0]["fingerprint"])
         # Check the correct length
-        self.assertEqual(fp.shape, (1,8925))
+        self.assertEqual(fp.shape, (1,self.fingerprinter.fp_len))
         # check if all bits are correct
         self.assertTrue(all(fp[0,fp_true]))
         self.assertFalse(any(fp[0,fp_false]))
