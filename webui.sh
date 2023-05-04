@@ -6,9 +6,6 @@ export TF_CPP_MIN_LOG_LEVEL=3
 
 # EXPORT_DB_BASE=0
 
-eval "$(conda shell.bash hook)"
-conda activate msnovelist-env
-
 # Get input directory user to adjust all files to that user,
 # to avoid rooted files that the user can't delete
 USER=`stat -c "%u:%g" /msnovelist-data`

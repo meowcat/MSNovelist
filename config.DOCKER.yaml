@@ -13,4 +13,4 @@ training_verbose: 1
 coverage_baseline: /msnovelist-data/coverage-baseline/baseline_sirius_top10_coverage_1604438836.pkl
 batch_size: 256
 rerank_sirius_results_n: 99999
-db_pubchem: /msnovelist-data/pubchem-ref/pubchem_ref.db
+db_pubchem: /msnovelist/data/pubchem-dummy/pubchem_ref_dummy.db

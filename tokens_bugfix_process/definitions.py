@@ -18,10 +18,10 @@ import tensorflow as tf
 import re
 import itertools
 
-# The dictionary below was obtained from the cococoh dataset
-# converted to selfies, then sf.get_alphabet_from_selfies
+# Adding the '?' as character 0 should map unknown characters
+# to this, and O(xygen) to 1. Thanks Lysander Leese & Steffen Neumann
 VOC = [
- '?'
+ '?',
  'O',
  '=',
  'C',

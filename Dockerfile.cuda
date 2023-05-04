@@ -54,6 +54,7 @@ RUN mkdir /contrib && cd /contrib && \
     chmod 755 fingerprinter_cli/bin/* && \
     apt-get -y install vim
 
+
 # Finally switch back to MAMBA_USER
 USER $MAMBA_USER
 
