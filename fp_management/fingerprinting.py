@@ -28,6 +28,8 @@ class Fingerprinter:
     def shutdown():
         pass
     
+    instance = None
+
     @classmethod
     def get_instance(cls):
         if cls.instance is None:
@@ -195,14 +197,16 @@ class Fingerprinter:
             check=False
         )
         smiles_out = res_smiles.stdout.decode('UTF-8').rstrip('\n').split('\n')
+
+        #print(smiles_out)
         
         def parse_line(id, line):
-            line_ = line.split('t')
-            if line[0] == "OK":
+            line_ = line.split('\t')
+            if line_[0] == "OK":
                 return {
                     'data_id': id,
-                    'smiles_generic': line[1],
-                    'smiles_canonical': line[2]
+                    'smiles_generic': line_[1],
+                    'smiles_canonical': line_[2]
                 }
             return {
                 'data_id': id,
@@ -211,7 +215,7 @@ class Fingerprinter:
             }
 
         smiles_parsed = [parse_line(id, line) for id, line in enumerate(smiles_out)]
-        id_ok = [x["data_id"] for x in smiles_parsed]
+        id_ok = [x["data_id"] for x in smiles_parsed if x["smiles_generic"] != ""]
         smiles_ok = [smiles[x] for x in id_ok]
         
         if calc_fingerprint:
@@ -229,15 +233,19 @@ class Fingerprinter:
                 fp_bits = line.strip('\n').split('\t')
                 fp_bits_num_ = [int(x) for x in fp_bits]
                 fp_bits_num = [x for x in fp_bits_num_ if x <  self.fp_len]
-                fp = np.zeros((self.fp_len,))
+                fp = np.zeros((self.fp_len,), dtype=np.uint8)
                 fp[fp_bits_num] = 1
+                if return_b64:
+                    fp_bytes = np.packbits(fp, bitorder='little').tobytes()
+                    fp_b64 = base64.b64encode(fp_bytes)
+                    return fp_b64
                 return fp
 
             fp_out = res_fp.stdout.decode('UTF-8').rstrip('\n').split('\n')
             fp_by_id = { id: parse_fp(line) for id, line in zip(id_ok, fp_out) }
 
             for item in smiles_parsed:
-                item['fingerprint'] = fp_by_id[item["data_id"]]
+                item['fingerprint'] = fp_by_id.get(item["data_id"], None)
 
         return smiles_parsed
     
@@ -245,7 +253,7 @@ class Fingerprinter:
         raise NotImplementedError("This function was not yet implemented for the S6 fingerprinter.")
 
 # B64-decodes one fingerprint
-def get_fp(fp, length = 8925, b64decode = True):
+def get_fp(fp, length = 14765, b64decode = True):
     if fp is None:
         return None
     if b64decode:
