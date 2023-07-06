@@ -117,11 +117,11 @@ fingerprinter = fpr.Fingerprinter.get_instance()
 
 # File for CSI:FingerID validation data
 # We need to load some DB to get blueprints!
-data_eval_ = sc.config["db_path_eval"]
+data_eval_ = sc.config["db_path_template"]
 # Load mapping table for the CSI:FingerID predictors
 # Load dataset and process appropriately
 db_eval = db.FpDatabase.load_from_config(data_eval_)
-dataset_val = db_eval.get_grp("fold0-casmi")
+dataset_val = db_eval.get_all()
 
 
 pipeline_options =  db_eval.get_pipeline_options()
