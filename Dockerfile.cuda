@@ -52,6 +52,7 @@ RUN mkdir /contrib && cd /contrib && \
     wget -q https://drive.switch.ch/index.php/s/lcCzNog2JRoELRc/download && \
     unzip download && rm download &&  \
     chmod 755 fingerprinter_cli/bin/* && \
+    apt-get -y update && \
     apt-get -y install vim
 
 

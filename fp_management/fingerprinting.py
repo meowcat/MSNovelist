@@ -31,6 +31,10 @@ class Fingerprinter:
     instance = None
 
     @classmethod
+    def static_fp_len(cls):
+        return cls.instance.fp_map.fp_len
+
+    @classmethod
     def get_instance(cls):
         if cls.instance is None:
             raise ValueError("Fingerprint instance not yet initialized")
@@ -47,7 +51,7 @@ class Fingerprinter:
         self.fingerprinter_bin = pathlib.Path(lib_path) / "fingerprinter_cli"
         self.smiles_normalizer_bin = pathlib.Path(lib_path) / "smiles_normalizer"
         self.fp_map = fp_map
-        self.fp_len = np.max(self.fp_map.subset_positions)
+        self.fp_len = fp_map.fp_len
 
         self.cache_path = cache
         self.cache = None
@@ -169,23 +173,49 @@ class Fingerprinter:
             return
         return data_
             
-    def process(self, smiles, calc_fingerprint = True, return_b64 = True):
+    def process(self, smiles, calc_fingerprint = True, 
+                return_b64 = True, return_numpy = False):
         '''
-        Raw fingerprinting (not cache-aware) directly from a list of SMILES
+        Raw fingerprinting (not cache-aware) directly from a list of SMILES. ALso
+        performs SMILES canonicalization according to the format needed for 
+        MSNovelist training and processing.
+
+        To only run SMILES normalization, use `calc_fingerprint = False`. This is
+        much faster.
+
+        Note: in pre-SIRIUS6 MSNovelist, this called a wrapper lib in Java via Jpype
+        which performed SMILES canonicalization and fingerprinting. In SIRIUS6
+        MSNovelist, canonicalization and fingerprinting are performed by two independent
+        CLI tools (`fingerprinter_cli` for fingerprinting, 
+        `smiles_normalizer` for SMILES processing).
 
         Parameters
         ----------
         data : TYPE
             DESCRIPTION.
-        calc_fingerprint : TYPE, optional
-            DESCRIPTION. The default is True.
-        return_b64 : TYPE, optional
-            DESCRIPTION. The default is True.
+        calc_fingerprint : bool, optional
+            Whether to perform the (slow) fingerprint calculation. The default is True.
+        return_b64 : bool, optional
+            Whether to return b64-encoded form of fingerprint. The default is True.
+        return_numpy: bool, optional
+            Whether to return the fingerprint as a Numpy array. The default is False.
+            This is to prepare a refactoring where we get rid of the legacy b64 and byte 
+            return modes. The new way of calculating gives us the array as desired directly,
+            so we should get rid of the other modes once we fix all dependencies in the
+            rest of the code.
 
         Returns
         -------
-        res : TYPE
-            DESCRIPTION.
+        res : list[dict]
+            Returns a list of dictionaries with elements:
+            `data_id`:  the index of the entry in the input list (see below)
+            `smiles_generic`: The SMILES in aromatic, but not canonicalized form according to CDK
+            `smiles_canonical`: The SMILES in aromatic, canonicalized form according to CDK
+            `fingerprint`: the calculated fingerprint. For backwards compatibility,
+                this returns the base64-encoded fingerprint by default and a byte array
+                if `return_b64` is False, because in the old version the result was returned
+                from Java as byte array. Now we are artifically recreating these structures
+                to avoid changes in the rest of the code. This should be 
 
         '''
         smiles_stdin = '\n'.join(smiles)
@@ -197,7 +227,6 @@ class Fingerprinter:
             check=False
         )
         smiles_out = res_smiles.stdout.decode('UTF-8').rstrip('\n').split('\n')
-
         #print(smiles_out)
         
         def parse_line(id, line):
@@ -233,15 +262,19 @@ class Fingerprinter:
                 fp_bits = line.strip('\n').split('\t')
                 fp_bits_num_ = [int(x) for x in fp_bits]
                 fp_bits_num = [x for x in fp_bits_num_ if x <  self.fp_len]
-                fp = np.zeros((self.fp_len,), dtype=np.uint8)
-                fp[fp_bits_num] = 1
+                fp = np.zeros((1, self.fp_len), dtype=np.uint8)
+                fp[0,fp_bits_num] = 1
+                if return_numpy:
+                    return fp
+                fp_bytes = np.packbits(fp, bitorder='little').tobytes()
                 if return_b64:
-                    fp_bytes = np.packbits(fp, bitorder='little').tobytes()
                     fp_b64 = base64.b64encode(fp_bytes)
                     return fp_b64
-                return fp
+                return fp_bytes
 
             fp_out = res_fp.stdout.decode('UTF-8').rstrip('\n').split('\n')
+            #breakpoint()
+
             fp_by_id = { id: parse_fp(line) for id, line in zip(id_ok, fp_out) }
 
             for item in smiles_parsed:
@@ -253,7 +286,9 @@ class Fingerprinter:
         raise NotImplementedError("This function was not yet implemented for the S6 fingerprinter.")
 
 # B64-decodes one fingerprint
-def get_fp(fp, length = 14765, b64decode = True):
+def get_fp(fp, length = None, b64decode = True):
+    if length is None:
+        length = Fingerprinter.static_fp_len()
     if fp is None:
         return None
     if b64decode:
@@ -262,6 +297,7 @@ def get_fp(fp, length = 14765, b64decode = True):
         fp_bytes = fp
     fp_bytes = np.frombuffer(fp_bytes, dtype=np.uint8).reshape(1, -1)
     fp_bits = process_fp_numpy_block(fp_bytes)
+    # potentially work around alignment issues on the last bits
     fp_bits = fp_bits[:,:length]
     return(fp_bits)
 
