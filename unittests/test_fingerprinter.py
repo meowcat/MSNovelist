@@ -172,27 +172,7 @@ class FingerprintingTest(unittest.TestCase):
         indices = [i for i in test_fingerprint.toIndizesArray()]
         return indices
     
-    @unittest.skip("we don't use this anymore")
-    def test_first_last_bit(self, length = 8925):
-        one_zero = ''.join(['1'] + ['0'] * (length-2) + ['1'])
-        test_fingerprint = \
-            self.fingerprinter.fpu.getTestFingerprint()[0]
-        first_last_bit = test_fingerprint.fromOneZeroString(one_zero)
-        first_last_b64 = self.fingerprinter.fpu.getBase64Fingerprint(first_last_bit)
-        first_last = fpr.get_fp(first_last_b64)
-        self.assertEqual(first_last[0,0], 1)
-        self.assertEqual(first_last[0,length-1], 1)
-        self.assertTrue(np.all(first_last[0, 1:(length-2)] == 0))
 
-    @unittest.skip("new fingerprints have different values")
-    def test_bit_169(self):
-        one_zero = ''.join(['0'] * 169 + ['1'] + ['0'] * (8925 - 170))
-        test_fingerprint = \
-            self.fingerprinter.fpu.getTestFingerprint()[0]
-        bit_169 = test_fingerprint.fromOneZeroString(one_zero)
-        bit_169_b64= self.fingerprinter.fpu.getBase64Fingerprint(bit_169)
-        fp_169 = fpr.get_fp(bit_169_b64)
-        np.where(fp_169)
 
     def test_b64_equivalent(self):
         ref = ['C=CC(C)(C)c1cc2cc3ccoc3cc2oc1=O',

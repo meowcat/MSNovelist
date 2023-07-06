@@ -1,25 +1,3 @@
-all_evaluation_sets:
-- fold0-casmi
-- fold0-sirius
-- fold0-holdout
-- fold1-sirius
-- fold1-holdout
-- fold2-sirius
-- fold2-holdout
-- fold3-sirius
-- fold3-holdout
-- fold4-sirius
-- fold4-holdout
-- fold5-sirius
-- fold5-holdout
-- fold6-sirius
-- fold6-holdout
-- fold7-sirius
-- fold7-holdout
-- fold8-sirius
-- fold8-holdout
-- fold9-sirius
-- fold9-holdout
 base_folder: /msnovelist/
 batch_size: 256
 coverage_baseline: /msnovelist-data/coverage-baseline/baseline_sirius_top10_coverage_1604438836.pkl
@@ -28,14 +6,14 @@ cv_folds: 10
 db_path: ''
 db_path_eval:
   construct_from: smiles
-  fp_map: /sirius6_db/training/csi_fingerid_mod.tsv
+  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
   path: /target/sirius6-crossval-folds.db
   pipeline_options:
     embed_X: false
   reload_smiles_pubchem: false
 db_path_sample:
   construct_from: smiles
-  fp_map: /sirius6_db/training/csi_fingerid_mod.tsv
+  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
   path: /target/sirius6-crossval-folds.db
   pipeline_options:
     embed_X: false
