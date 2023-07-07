@@ -3,6 +3,7 @@
 export COMPUTERNAME=DOCKER-LIGHT
 export MSNOVELIST_BASE=/msnovelist
 export TF_CPP_MIN_LOG_LEVEL=3
+export JAVA_HOME=/usr
 
 
 if [[ "$NAMING" != "" ]]
