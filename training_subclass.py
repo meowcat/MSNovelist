@@ -119,18 +119,18 @@ logger.info(f"Datasets - building pipeline for database")
 
 fp_dataset_train_ = gen.smiles_pipeline(fp_train, 
                                         batch_size = sc.config['batch_size'],
-                                        fp_map = fp_map.positions,
+                                        map_fingerprints=False,
                                         **fp_db.get_pipeline_options())
 
 fp_dataset_val_ = gen.smiles_pipeline(fp_val, 
                                         batch_size = sc.config['batch_size'],
-                                        fp_map = fp_map.positions,
+                                        map_fingerprints=False,
                                         **fp_db.get_pipeline_options())
 
 logger.info(f"Datasets - building pipeline for evaluation")
 fp_dataset_eval_ = gen.smiles_pipeline(dataset_eval, 
                                     batch_size = sc.config['batch_size'],
-                                    fp_map = fp_map.positions,
+                                    map_fingerprints=False,
                                     **db_eval.get_pipeline_options())
 
 logger.info(f"Datasets - pipelines built")
