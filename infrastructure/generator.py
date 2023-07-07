@@ -19,35 +19,6 @@ logger = logging.getLogger("MSNovelist")
 #from tensorflow import io
 
 
-def fp_pipeline(fpd, fp_map = None, unpack = True):
-    if unpack:
-        fpd = np.frombuffer(fpd, dtype=np.uint8).reshape((fpd.shape[0], -1))
-        fpd = fp.process_fp_numpy_block(fpd)
-    if fp_map is not None:
-        fpd = fpd[:,fp_map]
-    return fpd
-
-@tf.function
-def fp_pipeline_unpack(fp):
-    # unpack string into uint8 array
-    fp_decoded = tf.io.decode_raw(fp, 'uint8')
-    #fp_decoded = tf.reshape(fp_decoded, (tf.shape(fp)[0], -1))
-    # unpack uint8 array into bits
-    # https://stackoverflow.com/a/45459877/1259675
-    # 
-    # bits = tf.reshape(
-    #     tf.constant((128, 64, 32, 16, 8, 4, 2, 1), dtype=tf.uint8),
-    #     (1, 1, -1)
-    #     )
-    bits = tf.reshape(
-        tf.constant((1, 2, 4, 8, 16, 32, 64, 128), dtype=tf.uint8),
-        (1, 1, -1))
-    fp_decoded = tf.expand_dims(fp_decoded, 2)
-    fp_unpacked = tf.reshape(
-        tf.bitwise.bitwise_and(fp_decoded, bits), 
-        (tf.shape(fp)[0], -1))
-    fp_unpacked = tf.cast(fp_unpacked != 0, 'uint8')
-    return fp_unpacked
 
 @tf.function
 def fp_pipeline_map(fp, fp_map):
@@ -184,8 +155,8 @@ def smiles_pipeline(dataset,
     
     # Fingerprint: extract and map
     if unpack:
-        dataset_batch_fpr = dataset_batch_fpr.map(fp_pipeline_unpack)
-        dataset_batch_fprd = dataset_batch_fprd.map(fp_pipeline_unpack)
+        dataset_batch_fpr = dataset_batch_fpr.map(lambda x: tf.io.decode_raw(x, 'uint8'))
+        dataset_batch_fprd = dataset_batch_fprd.map(lambda x: tf.io.decode_raw(x, 'float32'))
     if fp_map is not None:
         fp_map_tensor = tf.convert_to_tensor(fp_map)
         dataset_batch_fpr = dataset_batch_fpr.map(lambda x: fp_pipeline_map(x, fp_map_tensor))

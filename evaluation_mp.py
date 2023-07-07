@@ -63,8 +63,9 @@ else:
 
 # First, do everything independent of weights
 
-fp_map = fpm.FingerprintMap(sc.config["fp_map"])
+fp_map = fpm.FingerprintMap(sc.config["fp_map_evaluation"])
 fpr.Fingerprinter.init_instance(sc.config['fingerprinter_path'],
+                                  fp_map,
                                   sc.config['fingerprinter_threads'],
                                   capture = False,
                                   cache = sc.config['fingerprinter_cache'])
@@ -83,8 +84,8 @@ decoder_name = sc.config["decoder_name"]
 
 sc.config.setdefault('cv_fold', 0)
 cv_fold = sc.config["cv_fold"]
-evaluation_set_ = sc.config['evaluation_set']
-evaluation_set = f"fold{cv_fold}-{evaluation_set_}"
+#evaluation_set_ = sc.config['evaluation_set']
+evaluation_set = f"fold{cv_fold}"
 
 # File for CSI:FingerID validation data
 data_eval_ = sc.config["db_path_eval"]
@@ -104,10 +105,10 @@ else:
 
 # Load dataset and sampler, apply sampler to dataset
 # (so we can also evaluate from fingerprint_sampled)
-fp_dataset_val_ = gen.smiles_pipeline(dataset_val, 
+fp_dataset_val_ = gen.smiles_pipeline(dataset_val,
                                     batch_size = n,
-                                    fp_map = fp_map.positions,
-                                    **pipeline_options)
+                                    **pipeline_options,
+                                    map_fingerprints=False)
 
 fp_dataset_val = gen.dataset_zip(fp_dataset_val_, 
                                  pipeline_encoder, pipeline_reference,

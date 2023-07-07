@@ -2,6 +2,14 @@ base_folder: /msnovelist/
 batch_size: 256
 cv_fold: 0
 cv_folds: 10
+db_path_eval:
+  construct_from: smiles
+  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+  path: /target/sirius6-5881ba29-3552-4f1d-9b5c-ec8ad7e2f34e.db
+  pipeline_options:
+    embed_X: false
+    fingerprint_selected: fingerprint_degraded
+  reload_smiles_pubchem: false
 db_path_template:
   construct_from: smiles
   fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
@@ -26,11 +34,13 @@ eval_n_total: 126
 eval_steps: 128
 eval_temperature: 1.0
 eval_top_n: 1
+evaluation_set: dataset
 f1_cutoff: 0.5
 fingerprinter_cache: /msnovelist-data/fingerprint-cache/fingerprint_cache.db
 fingerprinter_path: /contrib/fingerprinter_cli/bin/
 fingerprinter_threads: 10
 fp_map: /contrib/fingerprinter_cli/csi_fingerid.tsv
+fp_map_evaluation: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
 fp_overlay_method: none
 fp_source: ''
 hdf5_lock: 'FALSE'
@@ -81,7 +91,8 @@ sampler_config:
   final_round: true
   max_loop: 10
   replace_true: 0
-sampler_name: fp_sampling.cv_sampler_direct
+#sampler_name: fp_sampling.cv_sampler_direct
+sampler_name: ""
 sirius_bin: /usr/local/bin/sirius/bin/sirius
 steps_per_epoch: -1
 steps_per_epoch_validation: -1

@@ -58,9 +58,13 @@ class Fingerprinter:
         self.cache_connect()
         
     def cache_connect(self):
+        
         if self.cache_path is None:
             self.cache = None
             return
+        
+        if not pathlib.Path(self.cache_path).parent.exists():
+            pathlib.Path(self.cache_path).parent.mkdir(parents=True)
         self.cache = sqlite3.connect(self.cache_path)
         with self.cache as con:
             cursor = con.cursor()
