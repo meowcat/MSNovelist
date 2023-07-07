@@ -11,12 +11,7 @@ then
 	NAMING_ARG="--naming-convention=$NAMING"
 fi
 
-SIRIUS_SETTINGS=${2:-"${NAMING_ARG} formula -p qtof structure -d ALL_BUT_INSILICO"}
-#SIRIUS_SETTINGS=${2:-"formula -p qtof structure"}
-# EXPORT_DB_BASE=0
-
-eval "$(conda shell.bash hook)"
-conda activate msnovelist-env
+SIRIUS_SETTINGS=${2:-"${NAMING_ARG} formula fingerprint structure"}
 
 # Get input directory user to adjust all files to that user,
 # to avoid rooted files that the user can't delete

@@ -30,7 +30,7 @@ eval_id: ''
 eval_k: 128
 eval_kk: 128
 eval_n: 8
-eval_n_total: 126
+eval_n_total: 10
 eval_steps: 128
 eval_temperature: 1.0
 eval_top_n: 1

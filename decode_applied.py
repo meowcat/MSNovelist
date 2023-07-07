@@ -26,6 +26,7 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import random
+import tempfile
 
 from fp_management import database as db
 from fp_management import fingerprinting as fpr
@@ -60,6 +61,7 @@ lg.setLevel(RDLogger.CRITICAL)
 import infrastructure.score as msc
 import gc
 import molmass
+import shutil
 
 
 
@@ -109,9 +111,10 @@ fp_map = fpm.FingerprintMap(sc.config["fp_map"])
 # fp_val = fp_val[:n_total_]
 
 fpr.Fingerprinter.init_instance(sc.config['fingerprinter_path'],
-                                  sc.config['fingerprinter_threads'],
-                                  capture = False,
-                                  cache = sc.config['fingerprinter_cache'])
+                                fp_map,
+                                sc.config['fingerprinter_threads'],
+                                capture = False,
+                                cache = sc.config['fingerprinter_cache'])
 fingerprinter = fpr.Fingerprinter.get_instance()
 
 
@@ -123,7 +126,6 @@ data_eval_ = sc.config["db_path_template"]
 db_eval = db.FpDatabase.load_from_config(data_eval_)
 dataset_val = db_eval.get_all()
 
-
 pipeline_options =  db_eval.get_pipeline_options()
 pipeline_options['fingerprint_selected'] = "fingerprint"
 
@@ -131,7 +133,7 @@ pipeline_options['fingerprint_selected'] = "fingerprint"
 # (so we can also evaluate from fingerprint_sampled)
 fp_dataset_val_ = gen.smiles_pipeline(dataset_val, 
                                     batch_size = 1,
-                                    fp_map = fp_map.positions,
+                                    map_fingerprints=False,
                                     **pipeline_options)
 
 
@@ -191,10 +193,12 @@ m = len(queries)
 logger.info(f"Processing {m} queries")
 for i, query in enumerate(tqdm(queries)):
     query_path = os.path.join(query.path, "fingerprints")
-    fingerprints_path = os.listdir(query_path)
+    temp_fingerprints = tempfile.mkdtemp()
+    shutil.unpack_archive(query_path, temp_fingerprints, "zip")
+    fingerprints_path = os.listdir(temp_fingerprints)
     query_name = query.name
     mf = [path.split("_")[0] for path in fingerprints_path]
-    fp_path = [os.path.join(query_path, path) for path in fingerprints_path]
+    fp_path = [os.path.join(temp_fingerprints, path) for path in fingerprints_path]
     fp = np.stack([np.genfromtxt(open(path, "r")) for path in fp_path])
     # Overlay the fingerprint with the proposed substructure of the user
     clip_max = np.max(fp)
