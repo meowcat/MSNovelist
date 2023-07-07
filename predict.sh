@@ -54,7 +54,7 @@ fi
 
 # Run de novo prediction
 cd /msnovelist
-python "$MSNOVELIST_BASE/decode_applied.py" -c \
+python "$MSNOVELIST_BASE/predict.py" -c \
 	/msnovelist/data/weights/config.yaml \
 	/msnovelist-data/msnovelist-config-$RUNID.yaml
 

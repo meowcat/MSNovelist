@@ -272,7 +272,7 @@ def main():
 
     msnovelist_run = subprocess.Popen([
         'python',
-        '/msnovelist/decode_applied.py',
+        '/msnovelist/predict.py',
         '-c',
 	    '/msnovelist/data/weights/config.yaml',
         f"/msnovelist-data/msnovelist-config-{sc.config['eval_id']}.yaml",

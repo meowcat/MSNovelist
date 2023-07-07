@@ -71,7 +71,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S')
 logger = logging.getLogger("MSNovelist")
 logger.setLevel(logging.INFO)
-logger.info("decode_applied startup")
+logger.info("predict startup")
 
 tf.get_logger().setLevel('ERROR')
 

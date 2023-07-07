@@ -46,7 +46,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S')
 logger = logging.getLogger("MSNovelist")
 logger.setLevel(logging.INFO)
-logger.info("evaluation_mp startup")
+logger.info("evaluation startup")
 
 eval_id = str(int(time.time()))
 pickle_id = eval_id
