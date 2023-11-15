@@ -1,5 +1,6 @@
 
 import pandas as pd
+import numpy as np
 
 class FingerprintMap:
     '''
@@ -8,7 +9,8 @@ class FingerprintMap:
     for every bit that are used in scoring and fingerprint sampling.
     '''
 
-    def __init__(self, filename = None, data = None, subset = None):
+    def __init__(self, filename = None, data = None, subset = None, 
+                 explicit_len = None):
         
         if filename is not None:
             data = pd.read_csv(filename, delimiter='\t')
@@ -22,6 +24,8 @@ class FingerprintMap:
             self.subset_positions = subset
         else:
             self.subset_positions = data.index
+
+        self.fp_len = explicit_len or np.max(self.subset_positions) + 1
         
         data["sens"] = (data.TP + 0.5) / (data.TP + data.FN + 1)
         data["spec"] = (data.TN + 0.5) / (data.FP + data.TN + 1)

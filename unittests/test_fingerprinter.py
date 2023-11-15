@@ -21,47 +21,70 @@ from matplotlib import pyplot as plt
 
 import tempfile
 import pandas as pd
+import yaml
+
+test_cases = """
+chelidonine:
+  smiles: "CN1CC2=C(C=CC3=C2OCO3)C4C1C5=CC6=C(C=C5CC4O)OCO6"
+  name: chelidonine
+  bits_set: [ 18, 26, 44, 66, 77, 333, 418, 447, 454, 458, 465, 481, 482, 488, 489, 499, 506, 509, 514, 677, 684, 710, 712, 714, 720, 727, 785, 813, 814, 868, 874, 893, 1072, 1135, 1166, 1183, 1184, 1190, 1210, 1224, 1226, 1228, 1230, 1231, 1240, 1283, 1284, 1304, 1305, 1325, 1326, 1328, 1410, 1708, 3054, 4389, 4391, 4789, 4823, 4968, 4969, 4999, 5088, 5090, 5111, 5118, 5141, 5149, 5695, 5701, 6228, 6432, 6553, 6617, 6855, 7047, 7307, 7444, 7577, 7621, 7726, 7846, 7922, 8088, 8093, 8202, 8219, 8228, 8230, 8232, 8240, 8248, 8254, 8261, 8276, 8297, 8302, 8310, 8311, 8315, 8321, 8327, 8332, 8340, 8341, 8606, 8857, 8880, 8984, 9031, 9058, 9184, 9202, 9239, 9252, 9370, 9394, 9413, 9441, 9465, 9657, 9762, 9783, 9885, 10048, 10058, 10070, 10182, 10183, 10186, 10266, 10286, 10343, 10353, 10413, 10620, 10666, 10694, 10725, 10726, 10776, 10817, 10833, 10839, 10908, 10958, 11080, 11173, 11186, 11197, 11204, 11253, 11309, 11390, 11404, 11419, 11499, 11517, 11653, 11689, 11701, 11765, 11795, 11797, 11834, 11970, 11996, 12080, 12157, 12199, 12209, 12216, 12270, 12277, 12446, 12524, 12545, 12620, 12841, 12875, 12915, 13010, 13331]
+fluorocompound:
+  smiles: "N[C@@](F)(C)C(=O)O"
+  smiles_flat: "O=C(O)C(F)(N)C"
+  name: fluorothing
+  bits_set: [ 26, 63, 77, 415, 445, 456, 473, 492, 495, 813, 814, 868, 1064, 2564, 3668, 4863, 5703, 7302, 8433, 8441, 8454, 9017, 9098, 9214, 9771, 10024, 10048, 10243, 10250, 10623, 10766, 11609, 12813 ]  
+
+"""
 
 class FingerprintingTest(unittest.TestCase):
     
     def setUp(self):
         self.cache = tempfile.mkstemp(suffix = '.db')
         os.close(self.cache[0])
-        fpr.Fingerprinter.init_instance(sc.config['fingerprinter_path'],
-                                          sc.config['fingerprinter_threads'],
-                                          capture = True,
-                                          cache = self.cache[1])
+        self.fp_map = fpm.FingerprintMap(sc.config['fp_map'])
+        fpr.Fingerprinter.init_instance(
+            sc.config['fingerprinter_path'],
+            self.fp_map,
+            sc.config['fingerprinter_threads'],
+            capture = True,
+            cache = self.cache[1])
         self.fingerprinter = fpr.Fingerprinter.get_instance()
-        self.smi_CHE = "CN1CC2=C(C=CC3=C2OCO3)C4C1C5=CC6=C(C=C5CC4O)OCO6"
+        self.data = yaml.safe_load(test_cases)
+
         
     def tearDown(self):
         self.fingerprinter.cache.close()
         os.remove(self.cache[1])
 
     def test_flatten_smiles(self):
-        smiles = ["N[C@@](F)(C)C(=O)O"]
-        smiles_processed = self.fingerprinter.process(smiles, 
+        smiles = self.data["fluorocompound"]["smiles"]
+        smiles_processed = self.fingerprinter.process([smiles], 
                                                       calc_fingerprint = False)
         self.assertEqual(len(smiles_processed), 1)
         self.assertEqual(smiles_processed[0]["data_id"], 0)
-        self.assertEqual(smiles_processed[0]["smiles_canonical"], 'O=C(O)C(F)(N)C')
+        self.assertEqual(smiles_processed[0]["smiles_canonical"],
+                         self.data["fluorocompound"]["smiles_flat"])
         
     def test_calc_fingerprint(self):
-        smiles = ["N[C@@](F)(C)C(=O)O"]
-        smiles_processed = self.fingerprinter.process(smiles)
-        self.assertEqual(len(smiles_processed), 1)
-        self.assertEqual(smiles_processed[0]["data_id"], 0)
-        fingerprint = smiles_processed[0]["fingerprint"]
-        self.assertEqual(fingerprint[:20],
-                         'BAAADACggoAAYAAAAAAw')
-            # Affaire à suivre, used to be 'BAAADACgAgABAcAAAAAA' - is this
-        self.assertEqual(fingerprint[-85:-65], 'AAAIGYAAAAAAAAAAAAAA')
-        self.assertEqual(len(fingerprint), 1488)
+        for _, data in self.data.items():
+            result_array = self.fingerprinter.process(
+                [data["smiles"]], 
+                return_b64 = False,
+                return_numpy = True
+                )
+            fp_array = result_array[0]["fingerprint"]
+            bits_set = np.array(data['bits_set'])
+
+            self.assertTrue( (fp_array[0,bits_set] == 1).all() )
+            fp_array[0,bits_set] = 0
+            self.assertTrue( (fp_array == 0).all() )
+
+
         
     def test_multiple_fingerprints(self):
         smiles = ["CCCCC", "CCCCC(O)CC", "CCCCC(CCC(O)C)C"]  * 10
-        #emptyPos = [5,10,15,20]
-        emptyPos = []
+        emptyPos = [5,10,15,20]
+        #emptyPos = []
         for pos in emptyPos:
             smiles[pos] = "not a smiles" + str(pos)
         smiles_processed = self.fingerprinter.process(smiles, calc_fingerprint = True, return_b64 = True)
@@ -91,8 +114,10 @@ class FingerprintingTest(unittest.TestCase):
         smiles = ["haha", "N[C@@](F)(C)C(=O)O", "gaga", "gaga", "gugus"]
         for _ in range(sc.config['fingerprinter_threads']):
             smiles_processed = self.fingerprinter.process(smiles)
-            self.assertEqual(smiles_processed[1]["fingerprint"][:20],
-                              'BAAADACggoAAYAAAAAAw')
+            
+            #self.assertEqual(smiles_processed[1]["fingerprint"][:20],
+            #                  'BAAADACggoAAYAAAAAAw')
+
             # Affaire à suivre, used to be 'BAAADACgAgABAcAAAAAA' - is this
             # all from parsing SMILES instead of InChI?
             # No, the difference is made by the fact that the first
@@ -101,10 +126,12 @@ class FingerprintingTest(unittest.TestCase):
             # straight from pos 55.
             self.assertEqual(smiles_processed[0]["fingerprint"], None)
             self.assertEqual(smiles_processed[0]["smiles_generic"], "")
+            self.assertNotEqual(smiles_processed[1]["fingerprint"], None)
+            self.assertNotEqual(smiles_processed[1]["smiles_generic"], "")
             self.assertEqual(smiles_processed[3]["fingerprint"], None)
             self.assertEqual(smiles_processed[3]["smiles_generic"], "")
 
-            
+    @unittest.skip("everything changed, we don't use jpype anymore")
     def test_fingerprint_alignment(self):
         '''
         This generates the fingerprint for chelidonine,
@@ -130,7 +157,7 @@ class FingerprintingTest(unittest.TestCase):
         f = self.fingerprinter.process([smi_CHE])
         fp = fpr.get_fp(f[0]["fingerprint"])
         # Check the correct length
-        self.assertEqual(fp.shape, (1,8925))
+        self.assertEqual(fp.shape, (1,self.fingerprinter.fp_len))
         # check if all bits are correct
         self.assertTrue(all(fp[0,fp_true]))
         self.assertFalse(any(fp[0,fp_false]))
@@ -145,26 +172,7 @@ class FingerprintingTest(unittest.TestCase):
         indices = [i for i in test_fingerprint.toIndizesArray()]
         return indices
     
-    def test_first_last_bit(self, length = 8925):
-        one_zero = ''.join(['1'] + ['0'] * (length-2) + ['1'])
-        test_fingerprint = \
-            self.fingerprinter.fpu.getTestFingerprint()[0]
-        first_last_bit = test_fingerprint.fromOneZeroString(one_zero)
-        first_last_b64 = self.fingerprinter.fpu.getBase64Fingerprint(first_last_bit)
-        first_last = fpr.get_fp(first_last_b64)
-        self.assertEqual(first_last[0,0], 1)
-        self.assertEqual(first_last[0,length-1], 1)
-        self.assertTrue(np.all(first_last[0, 1:(length-2)] == 0))
 
-    
-    def test_bit_169(self):
-        one_zero = ''.join(['0'] * 169 + ['1'] + ['0'] * (8925 - 170))
-        test_fingerprint = \
-            self.fingerprinter.fpu.getTestFingerprint()[0]
-        bit_169 = test_fingerprint.fromOneZeroString(one_zero)
-        bit_169_b64= self.fingerprinter.fpu.getBase64Fingerprint(bit_169)
-        fp_169 = fpr.get_fp(bit_169_b64)
-        np.where(fp_169)
 
     def test_b64_equivalent(self):
         ref = ['C=CC(C)(C)c1cc2cc3ccoc3cc2oc1=O',

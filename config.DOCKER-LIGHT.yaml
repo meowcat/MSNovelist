@@ -1,38 +1,105 @@
 base_folder: /msnovelist/
-db_path: ''
-fp_map: '/msnovelist/data/fingerprint-map/csi_fingerid.csv'
-hdf5_lock: "FALSE"
-weights_folder: /msnovelist/data/weights/
-eval_folder: /msnovelist-data/results/
-log_folder: /msnovelist-data/tensorboard/
-sirius_bin: /usr/local/bin/sirius/bin/sirius
-fingerprinter_path: /usr/local/bin/fingerprint-wrapper/fingerprint-wrapper-bin-0.5.2.jar
-fingerprinter_threads: 10
-fingerprinter_cache: '/msnovelist-data/fingerprint_cache.db'
-training_verbose: 1
-coverage_baseline: ''
 batch_size: 256
-rerank_sirius_results_n: 64
-db_pubchem: /msnovelist/data/pubchem-dummy/pubchem_ref_dummy.db
+cv_fold: 0
+cv_folds: 10
 db_path_eval:
-    path: /msnovelist/data/minimal-dataset/minimal_dataset.csv
-    fp_map: '/msnovelist/data/fingerprint-map/csi_fingerid.csv'
-    construct_from: 'smiles'
-    reload_smiles_pubchem: True
-    pipeline_options:
-        fingerprint_selected: fingerprint_degraded
-        embed_X: False
-db_path_sample:
-    path: /msnovelist/data/minimal-dataset/minimal_dataset.csv
-    fp_map: '/msnovelist/data/fingerprint-map/csi_fingerid.csv'
-    construct_from: 'smiles'
-    reload_smiles_pubchem: True
-    pipeline_options:
-        fingerprint_selected: fingerprint_degraded
-        embed_X: False
+  construct_from: smiles
+  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+  path: /target/sirius6-5881ba29-3552-4f1d-9b5c-ec8ad7e2f34e.db
+  pipeline_options:
+    embed_X: false
+    fingerprint_selected: fingerprint_degraded
+  reload_smiles_pubchem: false
+db_path_template:
+  construct_from: smiles
+  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+  path: /msnovelist-data/minimal-dataset/sirius6-minimal.db
+  pipeline_options:
+    embed_X: false
+  reload_smiles_pubchem: false
+db_pubchem: /msnovelist/data/pubchem-dummy/pubchem_ref_dummy.db
+decoder_config:
+  clip_invalid_counts: false
+  tokenization: tokens_process
+decoder_name: beam_search
+epochs: 10
+eval_counter: ''
+eval_detail: false
+eval_folder: /sirius6_db/data/results/
 eval_id: ''
 eval_k: 128
 eval_kk: 128
 eval_n: 8
+eval_n_total: 10
 eval_steps: 128
 eval_temperature: 1.0
+eval_top_n: 1
+evaluation_set: dataset
+f1_cutoff: 0.5
+fingerprinter_cache: /msnovelist-data/fingerprint-cache/fingerprint_cache.db
+fingerprinter_path: /contrib/fingerprinter_cli/bin/
+fingerprinter_threads: 10
+fp_map: /contrib/fingerprinter_cli/csi_fingerid.tsv
+fp_map_evaluation: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+fp_overlay_method: none
+fp_source: ''
+hdf5_lock: 'FALSE'
+java_memory: 2048
+log_folder: /sirius6_db/data/tensorboard/
+model_config:
+  loss_weights:
+    out_nhydrogen: 0.03
+    out_smiles: 1
+  use_auxiliary_counter: true
+  use_fingerprint: true
+  use_hydrogen_estimator: true
+model_name: models.model_flex_20190401
+model_tag: msnovelist-sirius6-weights
+pipeline_encoder:
+- fingerprint_selected
+- mol_form
+- n_hydrogen
+pipeline_reference:
+- smiles_canonical
+- fingerprint_degraded
+pipeline_x:
+- fingerprint_selected
+- mol_form
+- tokens_X
+pipeline_x_eval: []
+pipeline_y:
+- tokens_y
+- n_hydrogen
+preprocessing_preselect_limit: 1000000
+preprocessing_workers_preselect: 10
+preprocessing_workers_pubchem: 30
+random_seed_global: ''
+reinforcement_config:
+  iterations_per_step: 1
+  reinforcement_steps: 50
+  reinforcement_steps_store:
+  - 4
+  - 9
+  - 24
+  - 49
+  sigma: 50
+  temperature: 2.0
+reinforcement_eval_count: -1
+reinforcement_eval_start: -1
+rerank_sirius_results_n: 99999
+sampler_config:
+  final_round: true
+  max_loop: 10
+  replace_true: 0
+#sampler_name: fp_sampling.cv_sampler_direct
+sampler_name: ""
+sirius_bin: /usr/local/bin/sirius/bin/sirius
+steps_per_epoch: -1
+steps_per_epoch_validation: -1
+tensorflow_trace: false
+training_id: ''
+training_set: train
+training_verbose: 1
+validation_set: validate
+weights: w-20-0.081-0.086.hdf5
+weights_folder: /msnovelist-data/weights/

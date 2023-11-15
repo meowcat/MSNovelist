@@ -16,84 +16,17 @@ import warnings
 import logging
 logger = logging.getLogger("MSNovelist")
 
-#from tensorflow import io
-
-
-def fp_pipeline(fpd, fp_map = None, unpack = True):
-    if unpack:
-        fpd = np.frombuffer(fpd, dtype=np.uint8).reshape((fpd.shape[0], -1))
-        fpd = fp.process_fp_numpy_block(fpd)
-    if fp_map is not None:
-        fpd = fpd[:,fp_map]
-    return fpd
-
-@tf.function
-def fp_pipeline_unpack(fp):
-    # unpack string into uint8 array
-    fp_decoded = tf.io.decode_raw(fp, 'uint8')
-    #fp_decoded = tf.reshape(fp_decoded, (tf.shape(fp)[0], -1))
-    # unpack uint8 array into bits
-    # https://stackoverflow.com/a/45459877/1259675
-    # 
-    # bits = tf.reshape(
-    #     tf.constant((128, 64, 32, 16, 8, 4, 2, 1), dtype=tf.uint8),
-    #     (1, 1, -1)
-    #     )
-    bits = tf.reshape(
-        tf.constant((1, 2, 4, 8, 16, 32, 64, 128), dtype=tf.uint8),
-        (1, 1, -1))
-    fp_decoded = tf.expand_dims(fp_decoded, 2)
-    fp_unpacked = tf.reshape(
-        tf.bitwise.bitwise_and(fp_decoded, bits), 
-        (tf.shape(fp)[0], -1))
-    fp_unpacked = tf.cast(fp_unpacked != 0, 'uint8')
-    return fp_unpacked
-
 @tf.function
 def fp_pipeline_map(fp, fp_map):
     return tf.gather(fp, fp_map, axis=1)
 
-
 def mf_pipeline(mf):
+    '''
+    Extract molecular formula from dictionary form into array
+    '''
     data = np.array(
         [[co[el] for el in sp.ELEMENTS_RDKIT] for co in mf])
     return data
-       
-    
-def xy_pipeline(dataset_batch_smiles,
-                length = sp.SEQUENCE_LEN,
-                initial = sp.INITIAL_CHAR,
-                final = sp.FINAL_CHAR,
-                pad = sp.TF_PAD_CHAR,
-                mol_form = None,
-                hinting = False):
-    dataset_batch_Xy = dataset_batch_smiles.\
-        map(lambda s: sp.smiles_map_elements(s))
-    dataset_batch_Xy = dataset_batch_Xy.\
-        map(lambda s: sp.smiles_pad(s, length, initial, final, pad, "back"))
-    dataset_batch_Xy = dataset_batch_Xy.\
-        map(lambda s: sp.smiles_xysplit(s))
-    dataset_batch_X = dataset_batch_Xy.map(lambda X, y: X)
-    dataset_batch_y = dataset_batch_Xy.map(lambda X, y: y)
-    # X dataset: encode one-hot, then add hinting
-    dataset_batch_X = dataset_batch_X.\
-        map(lambda s: sp.smiles_encode_x(s, sp.TF_PAD_CHAR))
-    # Add hinting in preprocessing?
-    # Since we now moved hinting to the model with RAC layers, this is 
-    # not in use anymore.
-    if hinting:
-        dataset_batch_X = dataset_batch_X.\
-            map(lambda X: sp.smiles_attach_hints(
-                X_smiles = X, mol_form=mol_form,
-                formula_hint=True,
-                grammar_hint=True))
-    # y dataset: encode one-hot and be done
-    dataset_batch_y = dataset_batch_y.\
-        map(sp.smiles_encode_y)
-    # Convert all to float
-    dataset_batch_X  = dataset_batch_X.map(lambda x: tf.cast(x, "float"))
-    dataset_batch_y  = dataset_batch_y.map(lambda x: tf.cast(x, "float"))
-    return dataset_batch_X, dataset_batch_y
     
 def xy_tokens_pipeline(dataset_batch_smiles,
                 length = tkp.SEQUENCE_LEN,
@@ -101,15 +34,26 @@ def xy_tokens_pipeline(dataset_batch_smiles,
                 final = tkp.FINAL_CHAR,
                 pad = tkp.PAD_CHAR,
                 embed_X = True):
+    
+    # Tokenize SMILES
     dataset_batch_Xy = dataset_batch_smiles.map(
         lambda s: tkp.tokens_to_tf(s))
+    
+    # One-hot encode
     dataset_batch_Xy = dataset_batch_Xy.map(
         lambda s: tkp.tokens_onehot(s))
+    
+    # Create X, sequence [0:n-1) and y, sequence [1:n)
     dataset_batch_Xy = dataset_batch_Xy.map(
         lambda s: tkp.tokens_split_xy(s))
+    
+    # extract X and y output to separate datasets
     dataset_batch_X = dataset_batch_Xy.map(lambda X, y: X)
     dataset_batch_y = dataset_batch_Xy.map(lambda X, y: y)
     
+    # Add the grammar and element encoding to the input matrix
+    # TODO: make sure i can remove this, since this is now done directly 
+    # in the model.
     if embed_X:
         dataset_batch_X = dataset_batch_X.map(
             lambda s: tkp.tokens_embed_all(s))
@@ -153,17 +97,12 @@ def smiles_pipeline(dataset,
         mf = mf_pipeline([pickle.loads(row["mf"]) for row in dataset])
     else:
         mf = mf_pipeline([row["mf"] for row in dataset])
-    # # On the fingerprint side: Transform the fingerprints offline, because
-    # # it is small and fast enough, and we don't need to convert all functions
-    # # to TF.
-    # fpr = fp_pipeline(fpr, fp_map, unpack = unpack)
-    # try:
-    #     fprd = fp_pipeline(fprd, fp_map, unpack = unpack)
-    # except IndexError:
-    #     warnings.warn("Degraded fingerprints are not available")
-    #     fprd = np.zeros_like(fpr)
 
     # Create datasets, zip, batch, unzip
+    # This means: out of five separate datasets, we create
+    # a single dataset, set the batch size, and extract the individual
+    # batched sub-datasets again. We could also set the batch size
+    # on each dataset independently, but this feels cleaner :)
     dataset_base = tf.data.Dataset.from_tensor_slices(
         {
             'smiles_canonical': smiles_canonical,
@@ -183,9 +122,14 @@ def smiles_pipeline(dataset,
 
     
     # Fingerprint: extract and map
+    # Unpack byte array (stored in database blob) to matrix
     if unpack:
-        dataset_batch_fpr = dataset_batch_fpr.map(fp_pipeline_unpack)
-        dataset_batch_fprd = dataset_batch_fprd.map(fp_pipeline_unpack)
+        dataset_batch_fpr = dataset_batch_fpr.map(lambda x: tf.io.decode_raw(x, 'uint8'))
+        dataset_batch_fprd = dataset_batch_fprd.map(lambda x: tf.io.decode_raw(x, 'float32'))
+    # If required, map the full fingerprint to the CSI:FingerID-predicted subfingerprint. 
+    # TODO: make sure we don't need this anymore and remove.
+    # For training and evaulation, we only have the subfingerprint (6000),
+    # for prediction we can easily do this earlier.
     if fp_map is not None:
         fp_map_tensor = tf.convert_to_tensor(fp_map)
         dataset_batch_fpr = dataset_batch_fpr.map(lambda x: fp_pipeline_map(x, fp_map_tensor))
@@ -199,16 +143,6 @@ def smiles_pipeline(dataset,
     dataset_batch_h = dataset_batch_mf.map(lambda x:
                                            x[:,sp.ELEMENTS_RDKIT.index('H')])
     # On the SMILES side: map elements, pad, and split to X,y
-    dataset_batch_X_generic, dataset_batch_y_generic = xy_pipeline(
-        dataset_batch_smiles_generic,
-        length, initial, final, pad, mol_form,
-        hinting
-        )
-    dataset_batch_X_canonical, dataset_batch_y_canonical = xy_pipeline(
-        dataset_batch_smiles_generic,
-        length, initial, final, pad, mol_form,
-        hinting
-        )
     
     # Tokens processing
     dataset_tokens_X, dataset_tokens_y = xy_tokens_pipeline(
@@ -216,10 +150,6 @@ def smiles_pipeline(dataset,
     
     dataset = {'fingerprint': dataset_batch_fpr, 
             'fingerprint_degraded': dataset_batch_fprd, 
-            'smiles_X_generic': dataset_batch_X_generic, 
-            'smiles_y_generic': dataset_batch_y_generic, 
-            'smiles_X_canonical': dataset_batch_X_canonical, 
-            'smiles_y_canonical': dataset_batch_y_canonical, 
             'mol_form': dataset_batch_mf,
             'smiles_generic': dataset_batch_smiles_generic,
             'smiles_canonical': dataset_batch_smiles_canonical,

@@ -10,6 +10,7 @@
 RM_PICKLE=1
 
 export MSNOVELIST_BASE=/msnovelist
+export JAVA_HOME=/usr
 EVAL_CONFIG_DIR=$WEIGHTS
 TRAINED_CONFIG_DIR=$TRAINED
 
@@ -44,7 +45,7 @@ do
 		echo "eval_id: '$LSB_JOBID'" > $TMPDIR/$LSB_JOBID.yaml
 		echo "eval_counter: '$COUNTER'" >> $TMPDIR/$LSB_JOBID.yaml
 		echo "fingerprinter_cache: /msnovelist-data/fingerprint-cache/fingerprint_cache.db" >> $TMPDIR/$LSB_JOBID.yaml
-        	python "$MSNOVELIST_BASE/evaluation_mp.py" -c $TRAINED_CONFIG_DIR/$TRAIN_CONFIG $EVAL_CONFIG_DIR/$EVAL_CONFIG $TMPDIR/$LSB_JOBID.yaml
+        	python "$MSNOVELIST_BASE/evaluation.py" -c $TRAINED_CONFIG_DIR/$TRAIN_CONFIG $EVAL_CONFIG_DIR/$EVAL_CONFIG $TMPDIR/$LSB_JOBID.yaml
         	python "$MSNOVELIST_BASE/evaluation/identity_ranking_with_metrics.py" -c $TRAINED_CONFIG_DIR/$TRAIN_CONFIG $EVAL_CONFIG_DIR/$EVAL_CONFIG $TMPDIR/$LSB_JOBID.yaml 
         	python "$MSNOVELIST_BASE/evaluation/top_similarity_with_metrics.py" -c $TRAINED_CONFIG_DIR/$TRAIN_CONFIG $EVAL_CONFIG_DIR/$EVAL_CONFIG $TMPDIR/$LSB_JOBID.yaml
         	python "$MSNOVELIST_BASE/evaluation/top_rediscovery.py" -c $TRAINED_CONFIG_DIR/$TRAIN_CONFIG $EVAL_CONFIG_DIR/$EVAL_CONFIG $TMPDIR/$LSB_JOBID.yaml

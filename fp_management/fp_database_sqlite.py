@@ -59,7 +59,7 @@ class FpDatabaseSqlite(FpDatabase):
             data_fp_full[:,self.fp_map.positions] = data_fp_predicted
             # data_fp_realigned = np.array([
             #     fpr.realign_fp_numpy(i) for i in list(data_fp_full)])
-            self.data_fp_predicted = data_fp_full
+            self.data_fp_predicted = data_fp_full.copy()
             # Reshape true 3541 FP into the full 7593 bit FP
             data_fp_full = np.zeros((data_fp_true.shape[0],
                                     self.fp_real_len))

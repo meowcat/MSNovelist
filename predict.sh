@@ -3,6 +3,7 @@
 export COMPUTERNAME=DOCKER-LIGHT
 export MSNOVELIST_BASE=/msnovelist
 export TF_CPP_MIN_LOG_LEVEL=3
+export JAVA_HOME=/usr
 
 
 if [[ "$NAMING" != "" ]]
@@ -10,12 +11,7 @@ then
 	NAMING_ARG="--naming-convention=$NAMING"
 fi
 
-SIRIUS_SETTINGS=${2:-"${NAMING_ARG} formula -p qtof structure -d ALL_BUT_INSILICO"}
-#SIRIUS_SETTINGS=${2:-"formula -p qtof structure"}
-# EXPORT_DB_BASE=0
-
-eval "$(conda shell.bash hook)"
-conda activate msnovelist-env
+SIRIUS_SETTINGS=${2:-"${NAMING_ARG} formula fingerprint structure"}
 
 # Get input directory user to adjust all files to that user,
 # to avoid rooted files that the user can't delete
@@ -58,7 +54,7 @@ fi
 
 # Run de novo prediction
 cd /msnovelist
-python "$MSNOVELIST_BASE/decode_applied.py" -c \
+python "$MSNOVELIST_BASE/predict.py" -c \
 	/msnovelist/data/weights/config.yaml \
 	/msnovelist-data/msnovelist-config-$RUNID.yaml
 

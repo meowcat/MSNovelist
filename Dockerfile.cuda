@@ -4,7 +4,9 @@ FROM mambaorg/micromamba:1.4.2 as micromamba
 FROM nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04
 
 RUN apt-get -qq update && \
-	apt-get -qq -y install --no-install-recommends unzip sqlite sqlite3 wget curl libxrender-dev libxext-dev 
+	apt-get -qq -y install --no-install-recommends \
+        unzip sqlite sqlite3 wget curl libxrender-dev libxext-dev \
+        openjdk-17-jdk-headless
 
 RUN wget -q https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64.tar.gz -O - |\
   tar xz && mv yq_linux_amd64 /usr/bin/yq
@@ -45,6 +47,19 @@ RUN	mkdir /msnovelist-data && \
     chown $MAMBA_USER:$MAMBA_USER /msnovelist-data && \
  	chmod 777 /msnovelist-data
 COPY --chown=${MAMBA_USER}:${MAMBA_USER} . /msnovelist
+
+RUN mkdir /contrib && cd /contrib && \
+    wget -q https://drive.switch.ch/index.php/s/lcCzNog2JRoELRc/download && \
+    unzip download && rm download &&  \
+    chmod 755 fingerprinter_cli/bin/* && \
+    apt-get -y update && \
+    apt-get -y install vim libblas3
+
+RUN cd /tmp && \
+    wget -q https://bio.informatik.uni-jena.de/repository/dist/de/unijena/bioinf/ms/siriusMS/6.0.0-SNAPSHOT/siriusMS-6.0.0-SNAPSHOT-linux64-headless.zip && \
+    unzip -q siriusMS-6.0.0-SNAPSHOT-linux64-headless.zip && \
+    rm *.zip && \
+    mv sirius /contrib
 
 # Finally switch back to MAMBA_USER
 USER $MAMBA_USER
