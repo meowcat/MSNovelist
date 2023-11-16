@@ -6,12 +6,12 @@ import sqlite3
 import sys
 sys.path.append('/msnovelist')
 import os
-os.environ["COMPUTERNAME"] = "DOCKER-LIGHT"
 
 import fp_management.database as db
 import itertools
 import uuid
-import fp_management.fingerprinting as fp
+import fp_management.fingerprinting as fpr
+import fp_management.fingerprint_map as fpm
 import smiles_config as sc
 import pickle
 db_crossval = "/sirius6_db/canopus_crossval.hdf5"
@@ -42,8 +42,15 @@ selected.sort()
 #con = sqlite3.connect(db_old)
 #con_su = su.Database(db_old)
 
+fp_map = fpm.FingerprintMap(sc.config['fp_map'])
 
-fingerprinter = fp.Fingerprinter(sc.config['fingerprinter_path'])
+fpr.Fingerprinter.init_instance(
+    sc.config['normalizer_path'],
+    sc.config['sirius_path'],
+    fp_map,
+    sc.config['fingerprinter_threads'],
+    capture = True)
+fingerprinter = fpr.Fingerprinter.get_instance()
 
 def try_fp_item(smiles_generic, smiles_canonical, fp):
     try:
@@ -60,8 +67,8 @@ def try_fp_item(smiles_generic, smiles_canonical, fp):
     return item
 
 def db_item_block(block):
-    smiles = [i[0] for i in block]
-    fp = [i[1] for i in block]
+    smiles = [s_ for s_, fp_, sel in block if sel]
+    fp = [fp_ for s_, fp_, sel in block if sel]
     smiles_proc = fingerprinter.process(smiles, calc_fingerprint=False)
     item = zip(smiles_proc, fp)
     fp_items_ = [try_fp_item(s['smiles_generic'], s['smiles_canonical'], fp)
@@ -69,9 +76,14 @@ def db_item_block(block):
     fp_items = [x for x in fp_items_ if x is not None]
     return fp_items
 
+
+data_selected = [False] * len(h5_train["smiles"])
+for i in selected:
+    data_selected[i] = True
 data_in = zip(
      h5_train["smiles"],
-     h5_train["csiTruth"]
+     h5_train["csiTruth"],
+     data_selected
 )
 
 
@@ -82,10 +94,18 @@ print(f"database: {db_new}")
 
 fp_db = db.FpDatabase.load_from_config(db_new)
 block = take(PROCESSING_BLOCK_SIZE, data_in)
+
+# smiles = [s_ for s_, fp_, sel in block if sel]
+# smiles_proc = fingerprinter.process(smiles, calc_fingerprint=False)
+
 processed_blocks = 0
 while (len(block) > 0) and (processed_blocks < PROCESSING_BLOCK_MAX_COUNT):
     print(f"Processing block {processed_blocks}")
+    selected_elements = sum(item[2] for item in block)
     data_proc = db_item_block(block)
+    print(f"Loaded {len(block)} elements, "
+          f"selected {selected_elements} elements, "
+          f"successfully processed {len(data_proc)} elements")
     fp_db.insert_fp_multiple(data_proc)
     #print(f"last inserted id: {inserted_id}")
     block = take(PROCESSING_BLOCK_SIZE, data_in)
