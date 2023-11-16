@@ -18,6 +18,7 @@ import pickle
 from warnings import warn
 import subprocess
 import pathlib
+import tempfile
 
 
 
@@ -41,15 +42,17 @@ class Fingerprinter:
         return cls.instance
     
     @classmethod
-    def init_instance(cls, lib_path, fp_map,  threads=1, capture=True, cache = None):
-        cls.instance = cls(lib_path, fp_map, threads, capture, cache)
+    def init_instance(cls, 
+                      normalizer_path, sirius_path,
+                      fp_map,  threads=1, capture=True, cache = None):
+        cls.instance = cls(normalizer_path, sirius_path, fp_map, threads, capture, cache)
     
-    def __init__(self, lib_path, fp_map, threads = 1, capture = True, cache = None,
+    def __init__(self, normalizer_path, sirius_path,
+                 fp_map, threads = 1, capture = True, cache = None,
                  ):
         self.threads = threads
-        self.lib_path = lib_path
-        self.fingerprinter_bin = pathlib.Path(lib_path) / "fingerprinter_cli"
-        self.smiles_normalizer_bin = pathlib.Path(lib_path) / "smiles_normalizer"
+        self.normalizer_bin = pathlib.Path(normalizer_path)
+        self.sirius_bin = pathlib.Path(sirius_path)
         self.fp_map = fp_map
         self.fp_len = fp_map.fp_len
 
@@ -222,16 +225,15 @@ class Fingerprinter:
                 to avoid changes in the rest of the code. This should be 
 
         '''
-        smiles_stdin = '\n'.join(smiles)
+        smiles_stdin = '\n'.join(smiles) + '\n'
 
         res_smiles  = subprocess.run(
-            [ self.smiles_normalizer_bin ],
+            [ self.normalizer_bin ],
             input=smiles_stdin.encode('UTF-8'),
             capture_output=True,
             check=False
         )
         smiles_out = res_smiles.stdout.decode('UTF-8').rstrip('\n').split('\n')
-        #print(smiles_out)
         
         def parse_line(id, line):
             line_ = line.split('\t')
@@ -253,17 +255,27 @@ class Fingerprinter:
         
         if calc_fingerprint:
 
-            smiles_fp_stdin = '\n'.join(smiles_ok)
+            smiles_tempfile = tempfile.NamedTemporaryFile(mode = 'w', delete=False)
+            smiles_tempfile.writelines(smiles_ok)
+            smiles_tempfile.close()
+            out_tempfile = tempfile.NamedTemporaryFile(delete=False)
+            out_tempfile.close()
+
 
             res_fp  = subprocess.run(
-                [ self.fingerprinter_bin ],
-                input = smiles_fp_stdin.encode('UTF-8'),
+                [ self.sirius_bin,
+                  f"-i={smiles_tempfile.name}", 
+                  "fingerprinter",
+                  f"--output={out_tempfile.name}",
+                  "--charge=0"    
+                ],
                 capture_output=True,
                 check=False
             )
 
             def parse_fp(line):
-                fp_bits = line.strip('\n').split('\t')
+                fp_parts = line.strip('\n').split('\t')
+                fp_bits = fp_parts[1].split(',')
                 fp_bits_num_ = [int(x) for x in fp_bits]
                 fp_bits_num = [x for x in fp_bits_num_ if x <  self.fp_len]
                 fp = np.zeros((1, self.fp_len), dtype=np.uint8)
@@ -276,7 +288,9 @@ class Fingerprinter:
                     return fp_b64
                 return fp_bytes
 
-            fp_out = res_fp.stdout.decode('UTF-8').rstrip('\n').split('\n')
+            with open(out_tempfile.name, 'r', encoding="UTF-8") as f:
+                fp_out_ = f.readlines()
+                fp_out = [ s.rstrip("\n") for s in fp_out_ ]
             #breakpoint()
 
             fp_by_id = { id: parse_fp(line) for id, line in zip(id_ok, fp_out) }

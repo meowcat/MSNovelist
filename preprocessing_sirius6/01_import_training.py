@@ -5,13 +5,15 @@ import sqlite3
 
 import sys
 sys.path.append('/msnovelist')
+import os
+os.environ["COMPUTERNAME"] = "DOCKER-LIGHT"
 
 import fp_management.database as db
 import itertools
 import uuid
 import fp_management.fingerprinting as fp
 import smiles_config as sc
-
+import pickle
 db_crossval = "/sirius6_db/canopus_crossval.hdf5"
 db_train = "/sirius6_db/canopus_database.hdf5"
 
@@ -25,6 +27,10 @@ h5_train = h5py.File(db_train, mode='r')
 PROCESSING_BLOCK_SIZE=40000
 PROCESSING_BLOCK_MAX_COUNT=9999999999
 
+selected_ = "/sirius6_db/smiles_sampled.pkl"
+with open(selected_, 'rb') as f:
+    selected = pickle.load(f)
+selected.sort()
 
 # inchikeys_crossval = h5_crossval["inchikeys"]
 # inchikeys_train = h5_train["inchikey"]

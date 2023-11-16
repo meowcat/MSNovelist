@@ -16,9 +16,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--config', '-c', nargs="*")
 
 if 'JUPYTER' not in os.environ:
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 else:
-    args = parser.parse_args({})
+    args, unknown = parser.parse_known_args()
 
 
 FILENAME_DEFAULT = "config.yaml"

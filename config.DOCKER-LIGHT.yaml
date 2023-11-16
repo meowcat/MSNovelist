@@ -37,10 +37,10 @@ eval_top_n: 1
 evaluation_set: dataset
 f1_cutoff: 0.5
 fingerprinter_cache: /msnovelist-data/fingerprint-cache/fingerprint_cache.db
-fingerprinter_path: /contrib/fingerprinter_cli/bin/
-fingerprinter_threads: 10
-fp_map: /contrib/fingerprinter_cli/csi_fingerid.tsv
-fp_map_evaluation: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+normalizer_path: /contrib/fingerprinter_cli/bin/smiles_normalizer
+sirius_path: /contrib/sirius/bin/sirius
+fp_map: /sirius6_db/fingerprint_mapping.tsv
+fp_map_evaluation: /sirius6_db/fingerprint_mapping_pseudo.tsv
 fp_overlay_method: none
 fp_source: ''
 hdf5_lock: 'FALSE'
@@ -93,7 +93,6 @@ sampler_config:
   replace_true: 0
 #sampler_name: fp_sampling.cv_sampler_direct
 sampler_name: ""
-sirius_bin: /usr/local/bin/sirius/bin/sirius
 steps_per_epoch: -1
 steps_per_epoch_validation: -1
 tensorflow_trace: false
