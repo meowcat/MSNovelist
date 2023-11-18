@@ -2,10 +2,18 @@ base_folder: /msnovelist/
 batch_size: 256
 cv_fold: 0
 cv_folds: 10
+db_path_train:
+  construct_from: smiles
+  fp_map: /target/fingerprint_mapping.tsv
+  path: /target/sirius6-ee5e71a4-77bd-487d-9508-3806ba2063c0.db
+  pipeline_options:
+    embed_X: false
+    fingerprint_selected: fingerprint_degraded
+  reload_smiles_pubchem: false
 db_path_eval:
   construct_from: smiles
   fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
-  path: /target/sirius6-5881ba29-3552-4f1d-9b5c-ec8ad7e2f34e.db
+  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
   pipeline_options:
     embed_X: false
     fingerprint_selected: fingerprint_degraded
@@ -14,6 +22,13 @@ db_path_template:
   construct_from: smiles
   fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
   path: /msnovelist-data/minimal-dataset/sirius6-minimal.db
+  pipeline_options:
+    embed_X: false
+  reload_smiles_pubchem: false
+db_path_sampler:
+  construct_from: smiles
+  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
   pipeline_options:
     embed_X: false
   reload_smiles_pubchem: false
@@ -88,11 +103,9 @@ reinforcement_eval_count: -1
 reinforcement_eval_start: -1
 rerank_sirius_results_n: 99999
 sampler_config:
-  final_round: true
-  max_loop: 10
-  replace_true: 0
+  bitmatrix: '/target/csi_crossval.pkl'
 #sampler_name: fp_sampling.cv_sampler_direct
-sampler_name: ""
+sampler_name: "bitmatrix"
 steps_per_epoch: -1
 steps_per_epoch_validation: -1
 tensorflow_trace: false
