@@ -9,7 +9,9 @@ sys.path.append('/msnovelist')
 import fp_management.database as db
 import itertools
 import uuid
-import fp_management.fingerprinting as fp
+import fp_management.fingerprinting as fpr
+import fp_management.fingerprint_map as fpm
+
 import smiles_config as sc
 
 db_crossval = "/sirius6_db/canopus_crossval.hdf5"
@@ -24,7 +26,15 @@ h5_train = h5py.File(db_train, mode='r')
 
 PROCESSING_BLOCK_SIZE=40000
 
-fingerprinter = fp.Fingerprinter(sc.config['fingerprinter_path'])
+fp_map = fpm.FingerprintMap(sc.config['fp_map'])
+
+fpr.Fingerprinter.init_instance(
+    sc.config['normalizer_path'],
+    sc.config['sirius_path'],
+    fp_map,
+    sc.config['fingerprinter_threads'],
+    capture = True)
+fingerprinter = fpr.Fingerprinter.get_instance()
 
 def try_fp_item(smiles_generic, smiles_canonical, fp_true, fp_predicted):
     try:
@@ -66,10 +76,14 @@ print(f"database: {db_new}")
 
 fp_db = db.FpDatabase.load_from_config(db_new)
 block = take(PROCESSING_BLOCK_SIZE, data_in)
+processed_blocks = 0
+
 while len(block) > 0:
+    print(f"Processing block {processed_blocks}")
     data_proc = db_item_block(block)
     fp_db.insert_fp_multiple(data_proc)
     #print(f"last inserted id: {inserted_id}")
+    processed_blocks = processed_blocks + 1
     block = take(PROCESSING_BLOCK_SIZE, data_in)
 
 print(f"database: {db_new} written")

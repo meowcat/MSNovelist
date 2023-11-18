@@ -114,6 +114,6 @@ while (len(block) > 0) and (processed_blocks < PROCESSING_BLOCK_MAX_COUNT):
 
 print(f"database: {db_new} written")
 
-with open('/target/log.yaml', 'r+') as f:
+with open('/target/log.yaml', 'a+') as f:
     f.write(f'db_step1: {db_new}')
 
