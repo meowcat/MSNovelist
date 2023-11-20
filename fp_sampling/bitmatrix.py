@@ -52,7 +52,17 @@ class SamplerFactory:
         return True
     
     @staticmethod
-    def fingerprint_bit_stats(bitmask_matrix):
+
+
+    class Bitmask(IntEnum):
+        PREDICTED = 1
+        TRUTH = 2
+        TP = 4
+        FP = 8
+        TN = 16
+        FN = 32
+
+    def fingerprint_bit_stats(self, bitmask_matrix):
         """
         Calculate the prediction stats for a bitmask matrix,
         (which has to be subsetted first because this is how we can do the 10CV.)
@@ -63,8 +73,12 @@ class SamplerFactory:
         TN = 1 + np.sum(Bitmask.TN & bitmask_matrix, axis=0) // Bitmask.TN
         FN = 1 + np.sum(Bitmask.FN & bitmask_matrix, axis=0) // Bitmask.FN
 
-        sampling_0 = FN / (TN + FN + 1)
-        sampling_1 = TP / (TP + FP + 1)
+        # The probability to sample sim-value 1 for a bit with truth-value 0
+        # should be the false positive rate
+        sampling_0 = FP / (TN + FP  )#+ 1)
+        # The probability to sample sim-value 1 for a bit with truth-value 1
+        # should be the recall
+        sampling_1 = TP / (TP + FN ) # + 1)
         sampling = np.stack([sampling_0, sampling_1])
 
         return sampling
@@ -113,7 +127,7 @@ class BitmatrixRandomBinarySampler(Sampler):
         rand = self.generator.uniform(tf.shape(fp), dtype="float32")
         #print(rand.numpy())
         # bits_x1 are the sampling results where x_j,i = 1
-        bits_x0 = tf.cast((rand > tf.expand_dims(self.bitmatrix_stats[0,:], 0)), "float32")
+        bits_x0 = tf.cast((rand < tf.expand_dims(self.bitmatrix_stats[0,:], 0)), "float32")
         bits_x1 = tf.cast((rand < tf.expand_dims(self.bitmatrix_stats[1,:], 0)), "float32")
 
         bits_unmasked = fp * bits_x1 + (1-fp) * bits_x0
