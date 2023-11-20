@@ -90,9 +90,15 @@ class BitmatrixRandomBinarySampler(Sampler):
         '''
         Parameters
         ----------
-        bitmatrix: a 2xn numpy int array, where n is the number of fingerprint bits.
-            The prediction EV for every {false, true} bit is stored in row {0, 1}.
-            A prediction sample for every bit is then rand(0,1) < prediction_EV of that bit.
+        bitmatrix_stats: a 2xn numpy int array, where n is the number of fingerprint bits.
+
+            Every value is the probability of sampling a One (True) value,
+            NOT the probability of sampling the correct value.
+
+            row 0 is the probability of sampling a One for a Zero (ideally very low),
+            row 1 is the probability of sampling a One for a One, (ideally very high)
+            
+            
         generator: tf.random.Generator
         Returns
         -------
