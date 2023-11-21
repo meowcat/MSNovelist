@@ -5,7 +5,7 @@
 #SBATCH --gpus=1
 #SBATCH --account=es_biol
 #SBATCH --mem-per-cpu=16G
-#SBATCH --gres=gpumem:23G
+#SBATCH --gres=gpumem:16G
 #SBATCH --time=23:59:59
 #SBATCH --tmp=4G
 
@@ -20,6 +20,8 @@ case $CMD in
 	"train")
 		CMD_EXEC="/msnovelist/train.sh"
 		OPTS="--nv"
+		FOLD=${SLURM_ARRAY_TASK_ID:-1}
+		JOB=${SLURM_ARRAY_JOB_ID:-$SLURM_JOB_ID}
 		;;
 	"bash")
 		CMD_EXEC="bash"
@@ -27,26 +29,29 @@ case $CMD in
 		;;
 esac
 
-echo "training_id: '$SLURM_JOB_ID'" > $DATA_LOC/train/$SLURM_JOB_ID.yaml
-
-if [[ "$SLURM_ARRAY_TASK_ID" != "" ]]
+if [[ "$CMD" == "train" ]]
 then
-	echo "training_id: '$SLURM_ARRAY_JOB_ID'" > $DATA_LOC/train/$SLURM_JOB_ID.yaml
-	echo "cv_fold: $SLURM_ARRAY_TASK_ID" >> $DATA_LOC/train/$SLURM_JOB_ID.yaml
+	mkdir -p $RESULTS_LOC/train
+	mkdir -p $RESULTS_LOC/weights
+	echo "training_id: '$JOB'" > $RESULTS_LOC/train/$SLURM_JOB_ID.yaml
+	echo "cv_fold: $FOLD" >> $RESULTS_LOC/train/$SLURM_JOB_ID.yaml
 fi
 
 echo "source _entrypoint.sh" >> $TMPDIR/.bashrc
 
 cp $DATA_LOC/*.db $TMPDIR
+cp $DATA_LOC/*.pkl $TMPDIR
+cp $DATA_LOC/*.tsv $TMPDIR
+cp $CODE_LOC/*.yaml $TMPDIR
 
 singularity run \
 	$OPTS \
 	--bind $TMPDIR:/$HOME \
 	--bind $TMPDIR:/sirius6_db \
-	--bind $DATA_LOC:/target \
+	--bind $TMPDIR:/target \
 	--bind $CODE_LOC:/msnovelist \
-	--bind $DATA_LOC:/data \
-	--bind $DATA_LOC:/msnovelist-data \
+	--bind $RESULTS_LOC:/data \
+	--bind $RESULTS_LOC:/msnovelist-data \
 	$SIF_LOC \
 	$CMD_EXEC
 

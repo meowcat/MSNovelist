@@ -20,13 +20,18 @@ case $1 in
         ;;
     run)
         docker run -d \
-            -v $DATA_PATH:/sirius6_db \
+            -v $DATA_LOC:/sirius6_db \
             -v $PWD:/msnovelist \
-            -v $DB_PATH:/target \
+            -v $DATA_LOC:/target \
             stravsm/msnovelist6 \
             webui.sh
             ;;
     kill)
         docker kill $DOCKER_ID
         ;;
+    singularity-build)
+        # requires a stravsm/msnovelist6 container on the docker registry,
+        # as singularity doesn't build Dockerfiles by itself
+        SINGULARITY_CACHEDIR=$SCRATCH_PATH/singularity_cache singularity build \
+            $SCRATCH_PATH/MSNovelist-image/msnovelist.sif docker://stravsm/msnovelist6
 esac
