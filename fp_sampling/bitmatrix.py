@@ -22,21 +22,23 @@ class SamplerFactory:
         self.bitmatrix_path = pathlib.Path(self.db_path["path"]).with_suffix(".pkl")
         self.selected_fold = config['cv_fold']
         self._loaded = False
-        self.db = None
+        self.db  = db.FpDatabase.load_from_config(self.db_path)
         self.ids = None
         self.bitmatrix_data = None
         self.bitmatrix_stats = None
     
     def load(self):
-        self.db  = db.FpDatabase.load_from_config(self.db_path)
+        
         ids_query_ = self.db.sql(
             "SELECT id from compounds WHERE"
             f" grp NOT IN ('invalid', 'fold{self.selected_fold}')"
             )
         # convert database 1-based indices to numpy 0-based indices
         self.ids = [x["id"] - 1 for x in ids_query_]
+        # if(len(self.ids) < 20):
+        #     print(str(self.ids))
         self.ids.sort()
-
+        
         with open(self.bitmatrix_path, 'rb') as f:
             bitmatrix_data_ = pickle.load(f)
             self.bitmatrix_data = bitmatrix_data_[self.ids, :]
@@ -67,11 +69,10 @@ class SamplerFactory:
         Calculate the prediction stats for a bitmask matrix,
         (which has to be subsetted first because this is how we can do the 10CV.)
         """
-        # we are adding 1 each to avoid 0 in the denominator:
-        TP = 1 + np.sum(Bitmask.TP & bitmask_matrix, axis=0) // Bitmask.TP
-        FP = 1 + np.sum(Bitmask.FP & bitmask_matrix, axis=0) // Bitmask.FP
-        TN = 1 + np.sum(Bitmask.TN & bitmask_matrix, axis=0) // Bitmask.TN
-        FN = 1 + np.sum(Bitmask.FN & bitmask_matrix, axis=0) // Bitmask.FN
+        TP = np.sum(Bitmask.TP & bitmask_matrix, axis=0) // Bitmask.TP
+        FP = np.sum(Bitmask.FP & bitmask_matrix, axis=0) // Bitmask.FP
+        TN = np.sum(Bitmask.TN & bitmask_matrix, axis=0) // Bitmask.TN
+        FN = np.sum(Bitmask.FN & bitmask_matrix, axis=0) // Bitmask.FN
 
         # The probability to sample sim-value 1 for a bit with truth-value 0
         # should be the false positive rate
@@ -98,7 +99,7 @@ class BitmatrixRandomBinarySampler(Sampler):
             row 0 is the probability of sampling a One for a Zero (ideally very low),
             row 1 is the probability of sampling a One for a One, (ideally very high)
             
-            
+
         generator: tf.random.Generator
         Returns
         -------

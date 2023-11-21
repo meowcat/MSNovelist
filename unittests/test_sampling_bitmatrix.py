@@ -12,8 +12,10 @@ import tensorflow as tf
 import numpy as np
 import numpy.testing as np_testing
 import pandas as pd
-
-
+import sqlite3
+import tempfile
+import pickle
+import pathlib
 
 class BitmatrixSamplingTest(unittest.TestCase):
     
@@ -140,7 +142,91 @@ class BitmatrixSamplingTest(unittest.TestCase):
         #self.assertTrue(True)
         
 
+    def test_samplerfactory(self):
+
+        # create a mock DB 
+        db_filename = tempfile.mkstemp(suffix=".db")
+        os.close(db_filename[0])
+        db = sqlite3.connect(db_filename[1])
+        cur = db.cursor()
+        cur.execute("CREATE TABLE compounds (id integer primary key, grp char(128))")
+        ids = range(10)
+        folds = ['fold4', 'fold3', 'fold2', 'fold1', 'fold0' ] * 2
+        folds[3] = "invalid"
+        for id, fold in zip(ids, folds):
+            cur.execute("INSERT INTO compounds VALUES(?, ?)", (id+1, fold))
+        db.commit()
+        db.close()
+        # create a mock fingerprint pickle
+
+
+
+        # 
+        tp = spl.Bitmask.PREDICTED | spl.Bitmask.TRUTH | spl.Bitmask.TP
+        fp = spl.Bitmask.PREDICTED | spl.Bitmask.FP
+        tn = spl.Bitmask.TN
+        fn = spl.Bitmask.TRUTH | spl.Bitmask.FN
+
+        fp_bitmatrix = np.array([
+            [tp, tp, tp, tp, tp, fn, tn, tn, fp, fp],
+            [fn, fn, fn, tn, tn, tn, fp, fp, fp, fp],
+            [fn, fn, fn, fn, fn, fp, fp, fp, fp, fp]
+        #   [yy, oo, yy, oo, yy, yy, oo, yy, yy, yy] for fold 3 (yy = yes)
+        ], dtype = 'uint8').transpose()
+
+        # np.sum(spl.Bitmask.TP & fp_bitmatrix, axis=0) // spl.Bitmask.TP = [5, 0, 0]
+        # np.sum(spl.Bitmask.FP & fp_bitmatrix, axis=0) // spl.Bitmask.FP = [2, 4, 5]
+        # np.sum(spl.Bitmask.TN & fp_bitmatrix, axis=0) // spl.Bitmask.TN = [2, 3, 0]
+        # np.sum(spl.Bitmask.FN & fp_bitmatrix, axis=0) // spl.Bitmask.FN = [1, 3, 5]
+
+        pkl_filename = pathlib.Path(db_filename[1]).with_suffix(".pkl")
+        with open(pkl_filename, 'wb') as f:
+            pickle.dump(fp_bitmatrix, f)
+
+        config = {
+            'db_path_sampler': {'path': db_filename[1]},
+            'cv_fold': '3'
+        }
+
+        n_fold3 = 7
+        stats_fold3 = [
+            { 'TP': 3, 'FP': 2, 'TN': 1, 'FN': 1 },
+            { 'TP': 0, 'FP': 3, 'TN': 2, 'FN': 2 },
+            { 'TP': 0, 'FP': 4, 'TN': 0, 'FN': 3 }
+        ]
+        samplerstats_fold3 = np.array([
+            [2./3., .75],
+            [0.6, 0],
+            [1, 0 ]
+        ]).transpose()
+
+        sampler_factory = spl.SamplerFactory(config)
+        sampler = sampler_factory.get_sampler()
+        np.testing.assert_allclose(
+            sampler.bitmatrix_stats.numpy(),
+            samplerstats_fold3
+        )
+
+
+
+
+
+
+
+
         
+
+
+        # class SamplerFactory:
+        # def __init__(self, config):
+        # self.db_path = config['db_path_sampler']
+        # self.bitmatrix_path = pathlib.Path(self.db_path["path"]).with_suffix(".pkl")
+        # self.selected_fold = config['cv_fold']
+        # self._loaded = False
+        # self.db = None
+        # self.ids = None
+        # self.bitmatrix_data = None
+        # self.bitmatrix_stats = None
 
 if __name__ == '__main__':
     unittest.main()
