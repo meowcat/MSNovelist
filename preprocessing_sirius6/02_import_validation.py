@@ -52,9 +52,10 @@ def try_fp_item(smiles_generic, smiles_canonical, fp_true, fp_predicted):
     return item
 
 def db_item_block(block):
-    smiles = [i[0] for i in block]
-    fp_true = [i[1] for i in block]
-    fp_predicted =  [i[2] for i in block]
+    smiles = [s_ for s_, fp_true_, fp_predicted_  in block]
+    fp_true = [fp_true_.astype('uint8') for s_, fp_true_, fp_predicted_  in block]
+    fp_predicted = [fp_predicted_ for s_, fp_true_, fp_predicted_  in block]
+
     smiles_proc = fingerprinter.process(smiles, calc_fingerprint=False)
     item = zip(smiles_proc, fp_true, fp_predicted)
     fp_items_ = [try_fp_item(s['smiles_generic'], s['smiles_canonical'], fp_true, fp_predicted)

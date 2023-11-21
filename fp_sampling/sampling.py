@@ -20,8 +20,8 @@ class Sampler:
     def __init__(self):
         pass
     
-    def map_dataset(self, dataset):
-        fp = dataset["fingerprint"]
+    def map_dataset(self, dataset, input_fingerprint = "fingerprint"):
+        fp = dataset[input_fingerprint]
         fp_sampled = fp.map(self.sample)
         dataset.update({"fingerprint_sampled": fp_sampled})
         return dataset

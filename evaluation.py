@@ -24,6 +24,7 @@ import infrastructure.decoder as dec
 import time
 from datetime import datetime
 import pickle
+import pathlib
 
 
 from rdkit import RDLogger
@@ -48,6 +49,8 @@ logger = logging.getLogger("MSNovelist")
 logger.setLevel(logging.INFO)
 logger.info("evaluation startup")
 
+pathlib.Path(sc.config["eval_folder"]).mkdir(parents=True, exist_ok=True)
+
 eval_id = str(int(time.time()))
 pickle_id = eval_id
 if sc.config['eval_id'] != '':
@@ -64,7 +67,8 @@ else:
 # First, do everything independent of weights
 
 fp_map = fpm.FingerprintMap(sc.config["fp_map_evaluation"])
-fpr.Fingerprinter.init_instance(sc.config['fingerprinter_path'],
+fpr.Fingerprinter.init_instance(sc.config['normalizer_path'],
+                                sc.config['sirius_path'],
                                   fp_map,
                                   sc.config['fingerprinter_threads'],
                                   capture = False,
@@ -118,10 +122,10 @@ sampler_name = sc.config['sampler_name']
 round_fingerprints = True
 if sampler_name != '':
     logger.info(f"Sampler {sampler_name} loading")
-    spl = importlib.import_module(sampler_name, 'fp_sampling')
-    sf = spl.SamplerFactory(sc.config)
-    round_fingerprints = sf.round_fingerprint_inference()
-    sampler = sf.get_sampler()
+    sampler_module = importlib.import_module('fp_sampling.' + sampler_name, 'fp_sampling')
+    sampler_factory = sampler_module.SamplerFactory(sc.config)
+    round_fingerprints = sampler_factory.round_fingerprint_inference()
+    sampler = sampler_factory.get_sampler()
     logger.info(f"Sampler {sampler_name} loaded")
     fp_dataset_val_ = sampler.map_dataset(fp_dataset_val_)
 
