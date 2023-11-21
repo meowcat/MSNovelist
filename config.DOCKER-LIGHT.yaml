@@ -4,11 +4,11 @@ cv_fold: 0
 cv_folds: 10
 db_path_train:
   construct_from: smiles
-  fp_map: /target/fingerprint_mapping.tsv
+  fp_map: /target/fingerprint_mapping_pseudo.tsv
   path: /target/sirius6-ee5e71a4-77bd-487d-9508-3806ba2063c0.db
   pipeline_options:
     embed_X: false
-    fingerprint_selected: fingerprint_degraded
+    fingerprint_selected: fingerprint_sampled
   reload_smiles_pubchem: false
 db_path_eval:
   construct_from: smiles

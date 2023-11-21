@@ -96,10 +96,10 @@ logger.info(f"Datasets - loading evaluation")
 
 
 
-# data_eval_ =  sc.config["db_path_eval"]
-# # note: with CV, the evaluation set name is the same as the validation set name
-# db_eval = db.FpDatabase.load_from_config(data_eval_)
-# dataset_eval = db_eval.get_grp(validation_set)
+data_eval_ =  sc.config["db_path_eval"]
+# note: with CV, the evaluation set name is the same as the validation set name
+db_eval = db.FpDatabase.load_from_config(data_eval_)
+dataset_eval = db_eval.get_grp(validation_set)
 
 logger.info(f"Datasets - building pipeline for database")
 
@@ -115,10 +115,10 @@ fp_dataset_val_ = gen.smiles_pipeline(fp_val,
                                         **fp_db.get_pipeline_options())
 
 logger.info(f"Datasets - building pipeline for evaluation")
-# fp_dataset_eval_ = gen.smiles_pipeline(dataset_eval, 
-#                                     batch_size = sc.config['batch_size'],
-#                                     map_fingerprints=False,
-#                                     **db_eval.get_pipeline_options())
+fp_dataset_eval_ = gen.smiles_pipeline(dataset_eval, 
+                                    batch_size = sc.config['batch_size'],
+                                    map_fingerprints=False,
+                                    **db_eval.get_pipeline_options())
 
 logger.info(f"Datasets - pipelines built")
 
