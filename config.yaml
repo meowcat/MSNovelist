@@ -28,9 +28,6 @@ validation_set: validate
 pipeline_x: []
 pipeline_y: []
 pipeline_x_eval: []
-preprocessing_workers_preselect: 10
-preprocessing_workers_pubchem: 30
-preprocessing_preselect_limit: 1000000
 eval_n: 16
 eval_n_total: -1
 eval_k: 16
@@ -45,15 +42,7 @@ java_memory: 2048
 fp_overlay_method: none
 tensorflow_trace: False
 training_verbose: 2
-reinforcement_config:
-    sigma: 50
-    iterations_per_step: 1
-    reinforcement_steps: 50
-    reinforcement_steps_store: [4, 9, 24, 49]
-    temperature: 2.
-reinforcement_eval_start: -1
-reinforcement_eval_count: -1
-eval_temperature: 1.0
+# eval_temperature: 1.0
 decoder_name: 'beam_search'
 random_seed_global: ''
 all_evaluation_sets:

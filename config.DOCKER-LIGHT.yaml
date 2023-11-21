@@ -12,22 +12,22 @@ db_path_train:
   reload_smiles_pubchem: false
 db_path_eval:
   construct_from: smiles
-  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+  fp_map: /target/fingerprint_mapping_pseudo.tsv
   path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
   pipeline_options:
     embed_X: false
     fingerprint_selected: fingerprint_degraded
   reload_smiles_pubchem: false
-db_path_template:
-  construct_from: smiles
-  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
-  path: /msnovelist-data/minimal-dataset/sirius6-minimal.db
-  pipeline_options:
-    embed_X: false
-  reload_smiles_pubchem: false
+# db_path_template:
+#   construct_from: smiles
+#   fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+#   path: /msnovelist-data/minimal-dataset/sirius6-minimal.db
+#   pipeline_options:
+#     embed_X: false
+#   reload_smiles_pubchem: false
 db_path_sampler:
   construct_from: smiles
-  fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+  fp_map: /target/fingerprint_mapping_pseudo.tsv
   path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
   pipeline_options:
     embed_X: false
@@ -59,7 +59,6 @@ fp_map_evaluation: /sirius6_db/fingerprint_mapping_pseudo.tsv
 fp_overlay_method: none
 fp_source: ''
 hdf5_lock: 'FALSE'
-java_memory: 2048
 log_folder: /sirius6_db/data/tensorboard/
 model_config:
   loss_weights:
@@ -85,25 +84,8 @@ pipeline_x_eval: []
 pipeline_y:
 - tokens_y
 - n_hydrogen
-preprocessing_preselect_limit: 1000000
-preprocessing_workers_preselect: 10
-preprocessing_workers_pubchem: 30
 random_seed_global: ''
-reinforcement_config:
-  iterations_per_step: 1
-  reinforcement_steps: 50
-  reinforcement_steps_store:
-  - 4
-  - 9
-  - 24
-  - 49
-  sigma: 50
-  temperature: 2.0
-reinforcement_eval_count: -1
-reinforcement_eval_start: -1
 rerank_sirius_results_n: 99999
-sampler_config:
-  bitmatrix: '/target/csi_crossval.pkl'
 #sampler_name: fp_sampling.cv_sampler_direct
 sampler_name: "bitmatrix"
 steps_per_epoch: -1
