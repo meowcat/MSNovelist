@@ -1,4 +1,4 @@
-## Process to set up on Euler
+q## Process to set up on Euler
 
 * Checkout git repo on login node. Seemingly doesn't work on job node.
 * Build singularity image on job node. Freaks out on login node: 
@@ -35,4 +35,9 @@
     SIF_LOC=/cluster/scratch/username/msnovelist.sif
     CODE_LOC=/cluster/home/username/MSNovelist-private
     RESULTS_LOC=/cluster/scratch/username/MSNovelist-results
+    ```
+
+* To train, run: 
+    ```
+    sbatch run_singularity.sh
     ```
