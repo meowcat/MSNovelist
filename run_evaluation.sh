@@ -20,25 +20,51 @@ case $CMD in
 		FOLD=${SLURM_ARRAY_TASK_ID:-1}
 		JOB=${SLURM_ARRAY_JOB_ID:-$SLURM_JOB_ID}
 		;;
+	"bash")
+		CMD_EXEC="bash"
+		OPTS=""
+		FOLD=${SLURM_ARRAY_TASK_ID:-1}
+		JOB=${SLURM_ARRAY_JOB_ID:-$SLURM_JOB_ID}
+		;;
 esac
 
 
 
-if [[ "$CMD" == "eval" ]]
-then
-	mkdir -p $RESULTS_LOC/evaluation
-	mkdir -p $RESULTS_LOC/weights
-	echo "eval_id: '$JOB'" > $RESULTS_LOC/evaluation/$SLURM_JOB_ID.yaml
-	echo "cv_fold: $FOLD" >> $RESULTS_LOC/evaluation/$SLURM_JOB_ID.yaml
-fi
-
+# if [[ "$CMD" == "eval" ]]
+# then
+# 	mkdir -p $RESULTS_LOC/evaluation
+# 	mkdir -p $RESULTS_LOC/weights
+# 	echo "eval_id: '$JOB'" > $RESULTS_LOC/evaluation/$SLURM_JOB_ID.yaml
+# 	echo "cv_fold: $FOLD" >> $RESULTS_LOC/evaluation/$SLURM_JOB_ID.yaml
+# fi	
+mkdir -p $RESULTS_LOC/evaluation
+mkdir -p $RESULTS_LOC/weights
+echo "eval_id: '$JOB'" > $RESULTS_LOC/evaluation/$SLURM_JOB_ID.yaml
+echo "cv_fold: $FOLD" >> $RESULTS_LOC/evaluation/$SLURM_JOB_ID.yaml
 
 echo "source _entrypoint.sh" >> $TMPDIR/.bashrc
 
 cp $DATA_LOC/*.db $TMPDIR
 cp $DATA_LOC/*.pkl $TMPDIR
 cp $DATA_LOC/*.tsv $TMPDIR
+cp $DATA_LOC/*.yaml $TMPDIR
 cp $CODE_LOC/*.yaml $TMPDIR
+cp -r $DATA_LOC/.sirius-6.0 $TMPDIR
+
+singularity run \
+	--bind $TMPDIR:/$HOME \
+	--env-file .env \
+	$SIF_LOC \
+	/contrib/sirius/bin/sirius login \
+	--user-env=SIRIUS_USERNAME \
+	--password-env=SIRIUS_PASSWORD
+
+singularity run \
+	--bind $TMPDIR:/$HOME \
+	--env-file .env
+	$SIF_LOC \
+	/contrib/sirius/bin/sirius login \
+	--select-subscription="$SIRIUS_LICENSE"
 
 singularity run \
 	$OPTS \

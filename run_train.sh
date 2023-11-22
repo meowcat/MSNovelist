@@ -42,7 +42,9 @@ echo "source _entrypoint.sh" >> $TMPDIR/.bashrc
 cp $DATA_LOC/*.db $TMPDIR
 cp $DATA_LOC/*.pkl $TMPDIR
 cp $DATA_LOC/*.tsv $TMPDIR
+cp $DATA_LOC/*.yaml $TMPDIR
 cp $CODE_LOC/*.yaml $TMPDIR
+
 
 singularity run \
 	$OPTS \

@@ -13,7 +13,7 @@ db_path_train:
 db_path_eval:
   construct_from: smiles
   fp_map: /target/fingerprint_mapping_pseudo.tsv
-  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
+  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7_fixed.db
   pipeline_options:
     embed_X: false
     fingerprint_selected: fingerprint_degraded
@@ -28,7 +28,7 @@ db_path_eval:
 db_path_sampler:
   construct_from: smiles
   fp_map: /target/fingerprint_mapping_pseudo.tsv
-  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
+  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7_fixed.db
   pipeline_options:
     embed_X: false
   reload_smiles_pubchem: false
@@ -37,7 +37,7 @@ decoder_config:
   clip_invalid_counts: false
   tokenization: tokens_process
 decoder_name: beam_search
-epochs: 10
+epochs: 30
 eval_counter: ''
 eval_detail: false
 eval_folder: /sirius6_db/data/results/
