@@ -49,9 +49,25 @@ case $1 in
         ;;
     tail-gpu) ## find currently running training process and follow
         PYPID=$(nvidia-smi --query-compute-apps="pid" --format=csv,noheader)
+        while [ ! -f  "/proc/$PYPID/fd/1" ];
+        do
+            PYPID=$(nvidia-smi --query-compute-apps="pid" --format=csv,noheader)
+            sleep 1
+        done
         tail -f /proc/$PYPID/fd/1
         ;;
     tail-cpu)
-        PYPID=$(ps -ef | grep python | grep evaluation  --query-compute-apps="pid" --format=csv,noheader)
+        PYPID=$( pgrep -u$(id -u) -a python | grep evaluation | cut -f1 -d' ' )
+        while [ ! -f  "/proc/$PYPID/fd/1" ];
+        do
+            PYPID=$( pgrep -u$(id -u) -a python | grep evaluation | cut -f1 -d' ' )
+            sleep 1
+        done
+        tail -f /proc/$PYPID/fd/1
 
+        ;;
+    bash-vs)
+        JOBID=$(squeue -o "%i %j" | grep -F "spawner-jupyterhub" | cut -f1 -d' ' )
+        srun --interactive --jobid $JOBID --pty bash
+        ;;
 esac

@@ -37,7 +37,7 @@ decoder_config:
   clip_invalid_counts: false
   tokenization: tokens_process
 decoder_name: beam_search
-epochs: 10
+epochs: 30
 eval_counter: ''
 eval_detail: false
 eval_folder: /sirius6_db/data/results/
