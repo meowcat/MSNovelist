@@ -49,7 +49,8 @@ logger = logging.getLogger("MSNovelist")
 logger.setLevel(logging.INFO)
 logger.info("evaluation startup")
 
-pathlib.Path(sc.config["eval_folder"]).mkdir(parents=True, exist_ok=True)
+eval_folder = pathlib.Path(sc.config["eval_folder"])
+eval_folder.mkdir(parents=True, exist_ok=True)
 
 eval_id = str(int(time.time()))
 pickle_id = eval_id
@@ -139,10 +140,10 @@ for weights_i, weights_ in enumerate(weights_list):
         pickle_id = sc.config['eval_id'] + "-" + sc.config['eval_counter']
         if len(weights_list) > 1:
             pickle_id = sc.config['eval_id'] + "-" + sc.config['eval_counter'] + "-" + weights_i
-        
-    logpath_topn = sc.config["eval_folder"] + "eval_" + eval_id + "_topn.txt"
-    logpath_top1 = sc.config["eval_folder"] + "eval_" + eval_id + "_top1.txt"
-    picklepath = sc.config["eval_folder"] + "eval_" + pickle_id + ".pkl"
+    
+    # logpath_topn = eval_folder / ("eval_" + eval_id + "_topn.txt")
+    # logpath_top1 = eval_folder / ("eval_" + eval_id + "_top1.txt")
+    picklepath = eval_folder / ("eval_" + pickle_id + ".pkl")
     logger.info(picklepath)
     logger.info(weights_)
     weights = os.path.join(sc.config["weights_folder"], weights_)
@@ -214,7 +215,9 @@ for weights_i, weights_ in enumerate(weights_list):
         reference_blocks.append(reference_df)
     results = pd.concat(result_blocks)        
     logger.info(f"Predicting {n_total} samples - done")
-    pickle.dump(results, open(picklepath + "_all", "wb"))
+    pickle.dump(results, open(
+        picklepath.with_suffix("").with_name(picklepath.name + "_all"), "wb")
+        )
 
     logger.info(f"Evaluating {n_total} blocks - start")
     
