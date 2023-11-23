@@ -214,7 +214,8 @@ for weights_i, weights_ in enumerate(weights_list):
         reference_blocks.append(reference_df)
     results = pd.concat(result_blocks)        
     logger.info(f"Predicting {n_total} samples - done")
-    
+    pickle.dump(results, open(picklepath + "_all", "wb"))
+
     logger.info(f"Evaluating {n_total} blocks - start")
     
     results_evaluated = []
@@ -234,16 +235,19 @@ for weights_i, weights_ in enumerate(weights_list):
                               construct_from = "smiles",
                               block_id = block_id)
         # Also actually compute the true fingerprint for the reference
-        fingerprinter.process_df(ref,
-                                 out_column = "fingerprint_ref_true",
-                                 inplace=True)
-        
+
+        if sc.config["eval_fingerprint_all"]:
+            fingerprinter.process_df(ref,
+                                    out_column = "fingerprint_ref_true",
+                                    inplace=True)
+            
         # Match ref to predictions
         block = block.join(ref, on="n", rsuffix="_ref")
         # Keep only correct formula
         block_ok = block.loc[block["inchikey1"].notna()].loc[block["mf"] == block["mf_ref"]]
         # Now actually compute the fingerprints, only for matching MF
-        fingerprinter.process_df(block_ok,
+        if sc.config["eval_fingerprint_all"]:
+            fingerprinter.process_df(block_ok,
                                  inplace=True)
         block = block.merge(
             block_ok[["n","k","fingerprint"]],

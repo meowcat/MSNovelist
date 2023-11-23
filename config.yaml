@@ -36,6 +36,7 @@ eval_steps: 128
 eval_id: ''
 eval_counter: ''
 eval_detail: False
+eval_fingerprint_all: true
 model_tag: ''
 eval_top_n: 1
 java_memory: 2048

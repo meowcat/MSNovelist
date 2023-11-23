@@ -1,6 +1,6 @@
 base_folder: /msnovelist/
 batch_size: 256
-cv_fold: 0
+cv_fold: 1
 cv_folds: 10
 db_path_train:
   construct_from: smiles
@@ -13,7 +13,7 @@ db_path_train:
 db_path_eval:
   construct_from: smiles
   fp_map: /target/fingerprint_mapping_pseudo.tsv
-  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
+  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7_fixed.db
   pipeline_options:
     embed_X: false
     fingerprint_selected: fingerprint_degraded
@@ -28,7 +28,7 @@ db_path_eval:
 db_path_sampler:
   construct_from: smiles
   fp_map: /target/fingerprint_mapping_pseudo.tsv
-  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7.db
+  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7_fixed.db
   pipeline_options:
     embed_X: false
   reload_smiles_pubchem: false
@@ -41,11 +41,12 @@ epochs: 10
 eval_counter: ''
 eval_detail: false
 eval_folder: /sirius6_db/data/results/
+eval_fingerprint_all: false
 eval_id: ''
 eval_k: 128
 eval_kk: 128
 eval_n: 8
-eval_n_total: 10
+eval_n_total: -1
 eval_steps: 128
 eval_temperature: 1.0
 eval_top_n: 1
@@ -95,5 +96,5 @@ training_id: ''
 training_set: train
 training_verbose: 1
 validation_set: validate
-weights: w-20-0.081-0.086.hdf5
-weights_folder: /msnovelist-data/weights/
+weights: w-20-0.070-0.075.hdf5
+weights_folder: /target/
