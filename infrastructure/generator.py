@@ -11,6 +11,7 @@ import numpy as np
 import smiles_process as sp
 import tokens_process as tkp
 import tensorflow as tf
+import tensorflow.strings as tf_strings
 import pickle
 import warnings
 import logging
@@ -130,12 +131,29 @@ def smiles_pipeline(dataset,
     
     # Fingerprint: extract and map
     # Unpack byte array (stored in database blob) to matrix
+
+    def decode_set_shape(x, dtype, length):
+        t = tf.io.decode_raw(x, dtype)
+        t.set_shape([None, length])
+        return t
+
+    fingerprint_len = tf_strings.length(fpr[0], unit="BYTE")
+
     if unpack:
         logger.info("using unpack")
-        dataset_batch_fpr = dataset_batch_fpr.map(lambda x: tf.io.decode_raw(x, 'uint8'))
-        dataset_batch_fprd = dataset_batch_fprd.map(lambda x: tf.io.decode_raw(x, fprd_type))
+        dataset_batch_fpr = dataset_batch_fpr.map(
+            lambda x: decode_set_shape(x, 'uint8', fingerprint_len))
+        dataset_batch_fprd = dataset_batch_fprd.map(
+            lambda x: decode_set_shape(x, fprd_type, fingerprint_len))
     else:
         logger.info("not using unpack")
+
+
+    # # Set a fixed size for the two outputs, otherwise decode_raw can't set the shape
+    # # This is required because fixed_length= is buggy in our old version of TF
+    # dataset_batch_fpr = dataset_batch_fpr.map(lambda x: x.set_shape([None, fingerprint_len]))
+    # dataset_batch_fprd = dataset_batch_fprd.map(lambda x: x.set_shape([None, fingerprint_len]))
+
     # If required, map the full fingerprint to the CSI:FingerID-predicted subfingerprint. 
     # TODO: make sure we don't need this anymore and remove.
     # For training and evaulation, we only have the subfingerprint (6000),

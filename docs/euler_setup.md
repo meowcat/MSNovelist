@@ -1,4 +1,4 @@
-q## Process to set up on Euler
+## Process to set up on Euler
 
 * Checkout git repo on login node. Seemingly doesn't work on job node.
 * Build singularity image on job node. Freaks out on login node: 
@@ -9,7 +9,7 @@ q## Process to set up on Euler
     SINGULARITY_CACHEDIR=$SCRATCH_PATH/singularity_cache singularity build \
             $SCRATCH_PATH/MSNovelist-image/msnovelist.sif docker://stravsm/msnovelist6
     ```
-* Build AWS image on job node
+* Build AWS image on job node. Set `SCRATCH_PATH` first.
     ```
     SINGULARITY_CACHEDIR=$SCRATCH_PATH/singularity_cache singularity build $SCRATCH_PATH/aws.sif docker://public.ecr.aws/aws-cli/aws-cli
     ```
@@ -40,4 +40,18 @@ q## Process to set up on Euler
 * To train, run: 
     ```
     sbatch run_singularity.sh
+    ```
+
+## Upload trained weights to S3
+
+* On a job node, run AWS image and upload weights
+    ```
+    singularity shell --bind $SCRATCH_PATH:/data --bind $TMPDIR:/$HOME $SCRATCH_PATH/aws.sif
+    # in singularity shell:
+    aws configure
+    # go to training results
+    cd /data/MSNovelist-results/weights
+    # choose a weights set to upload, and copy:
+
+    aws s3 cp --recursive m-36719628-msnovelist-sirius6-weights s3://sirius-novelist/m-36651659
     ```
