@@ -258,6 +258,7 @@ class BlueprintedModel(Model):
                                   name = 'hcounter_gradient_stop')
         
         if self.round_fingerprints:
+            print("using fingerprint rounding in model")
             self.fingerprint_rounding = Lambda(lambda x: tf.round(x))
         else:
             self.fingerprint_rounding = Lambda(lambda x: x)

@@ -55,8 +55,11 @@ def xy_tokens_pipeline(dataset_batch_smiles,
     # TODO: make sure i can remove this, since this is now done directly 
     # in the model.
     if embed_X:
+        logger.info("using embed_X")
         dataset_batch_X = dataset_batch_X.map(
             lambda s: tkp.tokens_embed_all(s))
+    else:
+        logger.info("not using embed_X")
     return dataset_batch_X, dataset_batch_y
             
 
@@ -87,16 +90,20 @@ def smiles_pipeline(dataset,
             ]))
     
     fpr = tf.convert_to_tensor([row["fingerprint"] for row in dataset])
+    fprd_type = "float32"
     try:
         fprd = tf.convert_to_tensor([row["fingerprint_degraded"] for row in dataset])
     except ValueError:
         warnings.warn("Degraded fingerprints not in dataset, using regular fingerprints")
+        fprd_type = "uint8"
         fprd = fpr
     
     if unpickle_mf:
+        logger.info("using unpickle_mf")
         mf = mf_pipeline([pickle.loads(row["mf"]) for row in dataset])
     else:
         mf = mf_pipeline([row["mf"] for row in dataset])
+        logger.info("not using unpickle_mf")
 
     # Create datasets, zip, batch, unzip
     # This means: out of five separate datasets, we create
@@ -124,16 +131,22 @@ def smiles_pipeline(dataset,
     # Fingerprint: extract and map
     # Unpack byte array (stored in database blob) to matrix
     if unpack:
+        logger.info("using unpack")
         dataset_batch_fpr = dataset_batch_fpr.map(lambda x: tf.io.decode_raw(x, 'uint8'))
-        dataset_batch_fprd = dataset_batch_fprd.map(lambda x: tf.io.decode_raw(x, 'float32'))
+        dataset_batch_fprd = dataset_batch_fprd.map(lambda x: tf.io.decode_raw(x, fprd_type))
+    else:
+        logger.info("not using unpack")
     # If required, map the full fingerprint to the CSI:FingerID-predicted subfingerprint. 
     # TODO: make sure we don't need this anymore and remove.
     # For training and evaulation, we only have the subfingerprint (6000),
     # for prediction we can easily do this earlier.
     if fp_map is not None:
+        logger.info("using fp_map")
         fp_map_tensor = tf.convert_to_tensor(fp_map)
         dataset_batch_fpr = dataset_batch_fpr.map(lambda x: fp_pipeline_map(x, fp_map_tensor))
         dataset_batch_fprd = dataset_batch_fprd.map(lambda x: fp_pipeline_map(x, fp_map_tensor))
+    else:
+        logger.info("not using fp_map")
     # convert to float
     dataset_batch_fpr  = dataset_batch_fpr.map(lambda x: tf.cast(x, "float"))
     dataset_batch_fprd  = dataset_batch_fprd.map(lambda x: tf.cast(x, "float"))
