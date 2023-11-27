@@ -17,7 +17,10 @@ config_ = "/target/log.yaml"
 with open(config_, 'r') as f:
     config = yaml.safe_load(f)
 
-databases = [config["db_step1"], config["db_step2"]]
+databases = [
+    config["db_step1"], 
+    config["db_step2"]
+    ]
 
 for fp_db_ in databases:
 

@@ -89,5 +89,5 @@ while len(block) > 0:
 
 print(f"database: {db_new} written")
 
-with open('/target/log.yaml', "r+") as f:
+with open('/target/log.yaml', "a+") as f:
     f.write(f'db_step2: {db_new}')

@@ -38,7 +38,7 @@ db_crossval_cur = db_crossval.cursor()
 # as we later need to pick them by row id!
 cpds_query = db_crossval_cur.execute("SELECT * FROM Compounds")
 def read_fp(cpd_data):
-    fp_truth = np.frombuffer(cpd_data["fingerprint"], dtype = "float32")
+    fp_truth = np.frombuffer(cpd_data["fingerprint"], dtype = "uint8")
     fp_pred = np.frombuffer(cpd_data["fingerprint_degraded"], dtype = "float32")
     fp_truth_int = np.rint(fp_truth).astype("int16")
     fp_pred_int = np.rint(fp_pred).astype("int16")
