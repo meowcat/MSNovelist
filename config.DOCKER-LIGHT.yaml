@@ -13,7 +13,7 @@ db_path_train:
 db_path_eval:
   construct_from: smiles
   fp_map: /target/fingerprint_mapping_pseudo.tsv
-  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7_fixed.db
+  path: /target/sirius6-0ccb3c70-85f7-4aa1-9b98-7c8941910a0e.db
   pipeline_options:
     embed_X: false
     fingerprint_selected: fingerprint_degraded
@@ -28,7 +28,7 @@ db_path_eval:
 db_path_sampler:
   construct_from: smiles
   fp_map: /target/fingerprint_mapping_pseudo.tsv
-  path: /target/sirius6-845db46d-e60f-4862-bdec-4115d209a5d7_fixed.db
+  path: /target/sirius6-0ccb3c70-85f7-4aa1-9b98-7c8941910a0e.db
   pipeline_options:
     embed_X: false
   reload_smiles_pubchem: false
