@@ -21,6 +21,9 @@ class SamplerFactory:
         self.db_path = config['db_path_sampler']
         self.bitmatrix_path = pathlib.Path(self.db_path["path"]).with_suffix(".pkl")
         self.selected_fold = config['cv_fold']
+        self.sampler_config = {}
+        if 'sampler_config' in config.keys():
+            self.sampler_config.update(config["sampler_config"])
         self._loaded = False
         self.db  = db.FpDatabase.load_from_config(self.db_path)
         self.ids = None
@@ -87,6 +90,7 @@ class SamplerFactory:
 
 class GammaBitmatrixRandomBinarySampler(Sampler):
     def __init__(self, bitmatrix_stats,
+                 config = None,
                  generator = tf.random.experimental.get_global_generator()):
         '''
         Parameters
@@ -106,13 +110,24 @@ class GammaBitmatrixRandomBinarySampler(Sampler):
         None.
 
         '''
+
+        config_ = {
+            'mean': 0,
+            'stddev': 1,
+            'reverse_0_stats': True,
+            'unchanged_rate': 0.1
+        }
+        if config is not None: 
+            config_.update(config)
+        #print(config_)
         Sampler.__init__(self)
         #self.stats = stats
         self.generator = generator
         self.bitmatrix_stats = tf.cast(bitmatrix_stats, "float32")
-        self.mean = 0
-        self.stddev = 0.5
-        self.reverse_0_stats = False
+        self.mean = config_['mean']
+        self.stddev = config_['stddev']
+        self.reverse_0_stats = config_['reverse_0_stats']
+        self.unchanged_rate = config_['unchanged_rate']
 
     @tf.function
     def sample(self, fp):
@@ -135,6 +150,14 @@ class GammaBitmatrixRandomBinarySampler(Sampler):
 
         '''
         rand = self.generator.uniform(tf.shape(fp), dtype="float32")
+
+        unchanged = tf.expand_dims(
+            tf.cast(
+                self.generator.uniform(tf.shape(fp)[0:1], dtype="float32") < self.unchanged_rate,
+                "float32"),
+            1
+            )
+
         log_gamma = self.generator.normal(
             tf.shape(fp)[0:1], 
             mean = self.mean,
@@ -160,9 +183,12 @@ class GammaBitmatrixRandomBinarySampler(Sampler):
         bits_x0 = tf.cast((rand < bitmatrix_gamma_0), "float32")
         bits_x1 = tf.cast((rand < bitmatrix_gamma_1), "float32")
 
-        bits_unmasked = fp * bits_x1 + (1-fp) * bits_x0
+        bits_sampled = fp * bits_x1 + (1-fp) * bits_x0
         #bits_masked = bits_unmasked
-        return bits_unmasked
+        bits_with_unchanged = (1-unchanged) * bits_sampled + unchanged * fp
+
+
+        return bits_with_unchanged
     
     @staticmethod
     def tanimoto(fp1, fp2):

@@ -27,6 +27,7 @@ import time
 import math
 import os
 import pickle
+import json
 
 
 # Setup logger
@@ -229,12 +230,19 @@ print_logs = LambdaCallback(
     on_epoch_end = lambda epoch, logs: print(logs)
     )
 
-
+json_log = open(os.path.join(weights_path, 'loss_log.json'),
+ mode='wt', buffering=1)
+json_logging_callback = LambdaCallback(
+    on_epoch_end=lambda epoch, logs: json_log.write(
+        json.dumps({'epoch': epoch, 'loss': logs}) + '\n'),
+    on_train_end=lambda logs: json_log.close()
+)
 #
 
 callbacks_list = [evaluation, 
                   tensorboard, 
                   print_logs, 
+                  json_logging_callback,
                   checkpoint, 
                   save_optimizer]
 

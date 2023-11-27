@@ -21,6 +21,9 @@ class SamplerFactory:
         self.db_path = config['db_path_sampler']
         self.bitmatrix_path = pathlib.Path(self.db_path["path"]).with_suffix(".pkl")
         self.selected_fold = config['cv_fold']
+        self.sampler_config = {}
+        if 'sampler_config' in config.keys():
+            self.sampler_config.update(config["sampler_config"])
         self._loaded = False
         self.db  = db.FpDatabase.load_from_config(self.db_path)
         self.ids = None
@@ -47,7 +50,7 @@ class SamplerFactory:
     def get_sampler(self):
         if not self._loaded:
             self.load()
-        sampler = BitmatrixRandomBinarySampler(self.bitmatrix_stats)
+        sampler = BitmatrixRandomBinarySampler(self.bitmatrix_stats, self.sampler_config)
         return sampler
     
     def round_fingerprint_inference(self):
@@ -87,7 +90,8 @@ class SamplerFactory:
 
 class BitmatrixRandomBinarySampler(Sampler):
     def __init__(self, bitmatrix_stats,
-                 generator = tf.random.experimental.get_global_generator()):
+                config = None,
+                generator = tf.random.experimental.get_global_generator()):
         '''
         Parameters
         ----------
@@ -106,10 +110,17 @@ class BitmatrixRandomBinarySampler(Sampler):
         None.
 
         '''
+        config_ = {
+            'unchanged_rate': 0
+        }
+        if config is not None: 
+            config_.update(config)
         Sampler.__init__(self)
         #self.stats = stats
         self.generator = generator
         self.bitmatrix_stats = tf.cast(bitmatrix_stats, "float32")
+        # Proportion of fingerprints that should be passed through "unchanged" i.e. perfect
+        self.unchanged_rate = config_["unchanged_rate"]
 
     @tf.function
     def sample(self, fp):
@@ -132,14 +143,22 @@ class BitmatrixRandomBinarySampler(Sampler):
 
         '''
         rand = self.generator.uniform(tf.shape(fp), dtype="float32")
+        unchanged = tf.expand_dims(
+            tf.cast(
+                self.generator.uniform(tf.shape(fp)[0:1], dtype="float32") < self.unchanged_rate,
+                "float32"),
+            1
+            )
         #print(rand.numpy())
         # bits_x1 are the sampling results where x_j,i = 1
         bits_x0 = tf.cast((rand < tf.expand_dims(self.bitmatrix_stats[0,:], 0)), "float32")
         bits_x1 = tf.cast((rand < tf.expand_dims(self.bitmatrix_stats[1,:], 0)), "float32")
 
-        bits_unmasked = fp * bits_x1 + (1-fp) * bits_x0
+        bits_sampled = fp * bits_x1 + (1-fp) * bits_x0
         #bits_masked = bits_unmasked
-        return bits_unmasked
+        bits_with_unchanged = (1-unchanged) * bits_sampled + unchanged * fp
+
+        return bits_with_unchanged
     
     @staticmethod
     def tanimoto(fp1, fp2):
