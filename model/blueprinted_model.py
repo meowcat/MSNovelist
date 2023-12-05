@@ -159,7 +159,9 @@ class BlueprintedModel(Model):
             'decoder_layers': 3,
             'use_hydrogen_estimator': True,
             'use_auxiliary_counter': True,
-            'use_fingerprint': True
+            'use_fingerprint': True,
+            'encoder_dropout': None,
+            'encoder_input_dropout': None
                 }
         if "model_config" in config:
             config_ = config["model_config"]
@@ -204,7 +206,9 @@ class BlueprintedModel(Model):
             layers = self.config['fp_enc_layers'],
             layers_decoder = self.config['decoder_layers'],
             units_decoder = self.config['decoder_hidden_size'],
-            zero_out = not self.config['use_fingerprint']
+            zero_out = not self.config['use_fingerprint'],
+            dropout = self.config['encoder_dropout'],
+            input_dropout = self.config['encoder_input_dropout']
             )
         
         self.hydrogen_estimator = HydrogenEstimator(

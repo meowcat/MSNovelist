@@ -46,7 +46,7 @@ eval_id: ''
 eval_k: 128
 eval_kk: 128
 eval_n: 8
-eval_n_total: -1
+eval_n_total: 300
 eval_steps: 128
 eval_temperature: 1.0
 eval_top_n: 1
@@ -68,6 +68,8 @@ model_config:
   use_auxiliary_counter: true
   use_fingerprint: true
   use_hydrogen_estimator: true
+  encoder_dropout: [0.3, 0.3]
+  encoder_input_dropout: None
 model_name: models.model_flex_20190401
 model_tag: msnovelist-sirius6-weights
 pipeline_encoder:
@@ -96,5 +98,5 @@ training_id: ''
 training_set: train
 training_verbose: 1
 validation_set: validate
-weights: w-20-0.070-0.075.hdf5
-weights_folder: /target/
+weights: w-20-0.069-0.074.hdf5
+weights_folder: /target/evaluation/m-36719628/1
