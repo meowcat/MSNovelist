@@ -92,10 +92,10 @@ rerank_sirius_results_n: 99999
 #sampler_name: fp_sampling.cv_sampler_direct
 sampler_name: "gamma_bitmatrix"
 sampler_config:
-  - mean: 0
-  - stddev: 2
-  - reverse_0_stats: false
-  - unchanged_rate: 0.05
+  mean: 0
+  stddev: 2
+  reverse_0_stats: false
+  unchanged_rate: 0.05
 steps_per_epoch: -1
 steps_per_epoch_validation: -1
 tensorflow_trace: false
