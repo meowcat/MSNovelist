@@ -71,7 +71,7 @@ model_config:
   encoder_dropout: [0.3, 0.3]
   encoder_input_dropout: None
 model_name: models.model_flex_20190401
-model_tag: msnovelist-sirius6-weights
+model_tag: msnovelist-sirius6-weights-gamma2_nonrev_005
 pipeline_encoder:
 - fingerprint_selected
 - mol_form
@@ -90,7 +90,12 @@ pipeline_y:
 random_seed_global: ''
 rerank_sirius_results_n: 99999
 #sampler_name: fp_sampling.cv_sampler_direct
-sampler_name: "bitmatrix"
+sampler_name: "gamma_bitmatrix"
+sampler_config:
+  - mean: 0
+  - stddev: 2
+  - reverse_0_stats: false
+  - unchanged_rate: 0.05
 steps_per_epoch: -1
 steps_per_epoch_validation: -1
 tensorflow_trace: false
