@@ -69,6 +69,13 @@ class FpItem:
     @classmethod
     def fromSiriusFp(cls, smiles_generic,
                      smiles_canonical, fp, source = '', grp = '', b64 = True):
+        return cls.fromFingerprint(
+            cls, smiles_generic,
+            smiles_canonical, fp, source, grp, b64
+        )
+    
+    def fromFingerprint(cls, smiles_generic,
+                     smiles_canonical, fp, source = '', grp = '', b64 = True):
         mol = Chem.MolFromSmiles(smiles_canonical)
         if mol is not None:
             inkey = Chem.MolToInchiKey(mol)

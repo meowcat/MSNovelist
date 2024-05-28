@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  5 21:19:33 2018
-
-@author: dvizard
-"""
 
 
 import numpy as np
@@ -22,21 +16,31 @@ import tempfile
 
 from .base_fingerprinting import BaseFingerprinter
 
+    # def _get_morgan_fp_base(self, mol: data.Mol, nbits: int = 2048, radius=2):
+    #     """get morgan fingeprprint"""
 
+    #     def fp_fn(m):
+    #         return AllChem.GetMorganFingerprintAsBitVect(m, radius, nBits=nbits)
 
-class Fingerprinter(BaseFingerprinter):
+    #     mol = mol.get_rdkit_mol()
+    #     fingerprint = fp_fn(mol)
+    #     array = np.zeros((0,), dtype=np.int8)
+    #     DataStructs.ConvertToNumpyArray(fingerprint, array)
+    #     return array
 
+class MistFingerprinter(BaseFingerprinter):
 
-    
-    instance = None
 
     @classmethod
     def shutdown():
         pass
+    
+    instance = None
+    bits = 4096
 
     @classmethod
     def static_fp_len(cls):
-        return cls.instance.fp_map.fp_len
+        return cls.instance.bits
 
     @classmethod
     def get_instance(cls):
@@ -45,11 +49,12 @@ class Fingerprinter(BaseFingerprinter):
         return cls.instance
     
     @classmethod
-    def init_instance(cls, 
-                      normalizer_path, sirius_path,
-                      fp_map,  threads=1, capture=True, cache = None):
-        cls.instance = cls(normalizer_path, sirius_path, fp_map, threads, capture, cache)
+    def init_instance(cls, bits = 4096, cache = None):
+        cls.instance = cls()
     
+    def __init__(self, bits, cache):
+        self.bits = bits
+        
             
     def process(self, smiles, calc_fingerprint = True, 
                 return_b64 = True, return_numpy = False):
@@ -174,8 +179,21 @@ class Fingerprinter(BaseFingerprinter):
     def fingerprint_file(self, cores, file_in, file_out):
         raise NotImplementedError("This function was not yet implemented for the S6 fingerprinter.")
 
-
-
+# B64-decodes one fingerprint
+def get_fp(fp, length = None, b64decode = True):
+    if length is None:
+        length = Fingerprinter.static_fp_len()
+    if fp is None:
+        return None
+    if b64decode:
+        fp_bytes = base64.b64decode(fp)
+    else:
+        fp_bytes = fp
+    fp_bytes = np.frombuffer(fp_bytes, dtype=np.uint8).reshape(1, -1)
+    fp_bits = process_fp_numpy_block(fp_bytes)
+    # potentially work around alignment issues on the last bits
+    fp_bits = fp_bits[:,:length]
+    return(fp_bits)
 
 def process_fp_numpy_block(fp_bytes):
     # fp_block = np.r_[[np.frombuffer(fp, dtype=np.uint8) 
