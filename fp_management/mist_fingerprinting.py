@@ -13,6 +13,8 @@ from warnings import warn
 import subprocess
 import pathlib
 import tempfile
+from rdkit import Chem
+from rdkit.Chem import AllChem
 
 from .base_fingerprinting import BaseFingerprinter
 
@@ -37,6 +39,7 @@ class MistFingerprinter(BaseFingerprinter):
     
     instance = None
     bits = 4096
+    radius = 2
 
     @classmethod
     def static_fp_len(cls):
@@ -49,11 +52,14 @@ class MistFingerprinter(BaseFingerprinter):
         return cls.instance
     
     @classmethod
-    def init_instance(cls, bits = 4096, cache = None):
-        cls.instance = cls()
+    def init_instance(cls, bits = 4096, radius = 2, cache = None):
+        cls.instance = cls(bits, radius, cache = cache)
     
-    def __init__(self, bits, cache):
+    def __init__(self, bits, radius, cache = None):
+        super().__init__(cache = cache)
         self.bits = bits
+        self.radius = radius
+        
         
             
     def process(self, smiles, calc_fingerprint = True, 
@@ -101,61 +107,35 @@ class MistFingerprinter(BaseFingerprinter):
                 to avoid changes in the rest of the code. This should be 
 
         '''
-        smiles_stdin = '\n'.join(smiles) + '\n'
 
-        res_smiles  = subprocess.run(
-            [ self.normalizer_bin ],
-            input=smiles_stdin.encode('UTF-8'),
-            capture_output=True,
-            check=False
-        )
-        smiles_out = res_smiles.stdout.decode('UTF-8').rstrip('\n').split('\n')
+
+        mol = [Chem.MolFromSmiles(x) for x in smiles]
+        smiles_kekulized = [
+            Chem.MolToSmiles(x) if x is not None
+            else "" for  x in mol
+            ]
+        data = [{
+            'data_id': i,
+            'smiles_generic': x,
+            'smiles_canonical': x
+        } for i, x in enumerate(smiles_kekulized)]
         
-        def parse_line(id, line):
-            line_ = line.split('\t')
-            if line_[0] == "OK":
-                return {
-                    'data_id': id,
-                    'smiles_generic': line_[1],
-                    'smiles_canonical': line_[2]
-                }
-            return {
-                'data_id': id,
-                'smiles_generic': "",
-                'smiles_canonical': ""
-            }
-
-        smiles_parsed = [parse_line(id, line) for id, line in enumerate(smiles_out)]
-        id_ok = [x["data_id"] for x in smiles_parsed if x["smiles_generic"] != ""]
-        smiles_ok = [smiles[x] for x in id_ok]
+        data_ok = [x for x in data if x["smiles_generic"] != ""]
         
         if calc_fingerprint:
 
-            smiles_tempfile = tempfile.NamedTemporaryFile(mode = 'w', delete=False)
-            smiles_tempfile.writelines(smiles_ok)
-            smiles_tempfile.close()
-            out_tempfile = tempfile.NamedTemporaryFile(delete=False)
-            out_tempfile.close()
+            def calc_fp(smiles):
 
-
-            res_fp  = subprocess.run(
-                [ self.sirius_bin,
-                  f"-i={smiles_tempfile.name}", 
-                  "fingerprinter",
-                  f"--output={out_tempfile.name}",
-                  "--charge=0"    
-                ],
-                capture_output=True,
-                check=False
-            )
-
-            def parse_fp(line):
-                fp_parts = line.strip('\n').split('\t')
-                fp_bits = fp_parts[1].split(',')
-                fp_bits_num_ = [int(x) for x in fp_bits]
-                fp_bits_num = [x for x in fp_bits_num_ if x <  self.fp_len]
-                fp = np.zeros((1, self.fp_len), dtype=np.uint8)
+                m = Chem.MolFromSmiles(smiles)
+                r = AllChem.GetMorganFingerprintAsBitVect(m, self.radius, nBits=self.bits)
+                fp_bits_num = [x for x in r.GetOnBits()]
+                
+                fp = np.zeros((1, self.bits), dtype=np.uint8)
                 fp[0,fp_bits_num] = 1
+                return fp
+            
+            def calc_and_pack_fp(smiles):
+                fp = calc_fp(smiles)
                 if return_numpy:
                     return fp
                 fp_bytes = np.packbits(fp, bitorder='little').tobytes()
@@ -164,49 +144,12 @@ class MistFingerprinter(BaseFingerprinter):
                     return fp_b64
                 return fp_bytes
 
-            with open(out_tempfile.name, 'r', encoding="UTF-8") as f:
-                fp_out_ = f.readlines()
-                fp_out = [ s.rstrip("\n") for s in fp_out_ ]
-            #breakpoint()
 
-            fp_by_id = { id: parse_fp(line) for id, line in zip(id_ok, fp_out) }
+            for x in data_ok:
+                x["fingerprint"] = calc_and_pack_fp(x["smiles_generic"])
 
-            for item in smiles_parsed:
-                item['fingerprint'] = fp_by_id.get(item["data_id"], None)
-
-        return smiles_parsed
+        return data_ok
     
-    def fingerprint_file(self, cores, file_in, file_out):
-        raise NotImplementedError("This function was not yet implemented for the S6 fingerprinter.")
+    def get_fp_length(self):
+        return self.bits
 
-# B64-decodes one fingerprint
-def get_fp(fp, length = None, b64decode = True):
-    if length is None:
-        length = Fingerprinter.static_fp_len()
-    if fp is None:
-        return None
-    if b64decode:
-        fp_bytes = base64.b64decode(fp)
-    else:
-        fp_bytes = fp
-    fp_bytes = np.frombuffer(fp_bytes, dtype=np.uint8).reshape(1, -1)
-    fp_bits = process_fp_numpy_block(fp_bytes)
-    # potentially work around alignment issues on the last bits
-    fp_bits = fp_bits[:,:length]
-    return(fp_bits)
-
-def process_fp_numpy_block(fp_bytes):
-    # fp_block = np.r_[[np.frombuffer(fp, dtype=np.uint8) 
-    #     for fp in fp_bytes if fp is not None]]
-    fp_block = np.unpackbits(fp_bytes, axis = 1, bitorder="little")
-    return fp_block
-
-def repack_fp_numpy(X_fp):
-    fp_bytes = np.packbits(X_fp, bitorder = 'little').tobytes()
-    return fp_bytes
-
-
-
-# Functionality to test FP processing: alignment etc
-# Todo: Make real unit tests
-        
