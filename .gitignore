@@ -4,7 +4,6 @@ config.UCH-STRAVSMI-NB.yaml
 .ps_project/
 */.ipynb_checkpoints/
 .ipynb_checkpoints/
-*.ipynb
 *.png
 *.pkl
 asmsmols 
