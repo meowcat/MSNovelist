@@ -22,9 +22,7 @@ import tempfile
 
 from .base_fingerprinting import BaseFingerprinter
 
-
-
-class Fingerprinter(BaseFingerprinter):
+class SiriusFingerprinter(BaseFingerprinter):
 
 
     
@@ -48,9 +46,35 @@ class Fingerprinter(BaseFingerprinter):
     def init_instance(cls, 
                       normalizer_path, sirius_path,
                       fp_map,  threads=1, capture=True, cache = None):
-        cls.instance = cls(normalizer_path, sirius_path, fp_map, threads, capture, cache)
+        cls.instance = cls(normalizer_path, sirius_path, fp_map, threads, capture, cache=cache)
     
-            
+    def __init__(self, lib_path, threads = 1, capture = True,cache=None):
+        super.__init__(cache=cache)
+        self.threads = threads
+        java_mem = sc.config['java_memory']
+        option_xmx = f"-Xmx{java_mem}m"
+        option_xms = f"-Xms{java_mem}m"
+        if not jp.isJVMStarted():
+            jp.startJVM(jp.getDefaultJVMPath(), 
+                        option_xmx, option_xms, "-Djava.class.path="+lib_path,
+                        convertStrings = True)
+        fpu = jp.JClass('ch.moduled.fingerprintwrapper.FingerprintUtil').instance
+        self.n_fingerprinters = fpu.makeFingerprinters(2*threads)
+        # Setup logging from Java
+        self.capture = capture
+        if capture:
+            mystream = jp.JProxy("ch.moduled.fingerprintwrapper.IPythonPipe", inst=sys.stdout)
+            errstream = jp.JProxy("ch.moduled.fingerprintwrapper.IPythonPipe", inst=sys.stderr)
+            outputstream = jp.JClass("ch.moduled.fingerprintwrapper.PythonOutputStream")()
+            outputstream.setPythonStdout(mystream)
+            ps = jp.JClass("java.io.PrintStream")
+            err_stream = jp.JClass("ch.moduled.fingerprintwrapper.PythonOutputStream")()
+            err_stream.setPythonStdout(errstream)
+            jp.java.lang.System.setOut(ps(outputstream, True))
+            jp.java.lang.System.setErr(ps(err_stream, True))
+
+        self.fpu = fpu
+        
     def process(self, smiles, calc_fingerprint = True, 
                 return_b64 = True, return_numpy = False):
         '''
@@ -171,24 +195,20 @@ class Fingerprinter(BaseFingerprinter):
 
         return smiles_parsed
     
+    def get_fp_length(self):
+        return self.static_fp_len
+    
     def fingerprint_file(self, cores, file_in, file_out):
         raise NotImplementedError("This function was not yet implemented for the S6 fingerprinter.")
 
+class Fingerprinter(SiriusFingerprinter):
+    pass
 
 
 
-def process_fp_numpy_block(fp_bytes):
-    # fp_block = np.r_[[np.frombuffer(fp, dtype=np.uint8) 
-    #     for fp in fp_bytes if fp is not None]]
-    fp_block = np.unpackbits(fp_bytes, axis = 1, bitorder="little")
-    return fp_block
-
-def repack_fp_numpy(X_fp):
-    fp_bytes = np.packbits(X_fp, bitorder = 'little').tobytes()
-    return fp_bytes
 
 
 
 # Functionality to test FP processing: alignment etc
 # Todo: Make real unit tests
-        
+

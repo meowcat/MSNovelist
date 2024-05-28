@@ -74,6 +74,7 @@ class FpItem:
             smiles_canonical, fp, source, grp, b64
         )
     
+    @classmethod
     def fromFingerprint(cls, smiles_generic,
                      smiles_canonical, fp, source = '', grp = '', b64 = True):
         mol = Chem.MolFromSmiles(smiles_canonical)

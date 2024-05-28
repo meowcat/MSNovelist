@@ -118,11 +118,12 @@ class BaseFingerprinter:
             data_[out_column] = self.cache_query(data_["inchikey1"])
             data_nohit = data_.loc[data_[out_column].isna()]
             fingerprints_ = self.process(data_nohit[in_column].fillna("").to_list())
-            fingerprints = [get_fp(x["fingerprint"]) for x in fingerprints_]
+            fingerprints = [self.get_fp(x["fingerprint"]) for x in fingerprints_]
             self.cache_add(data_nohit["inchikey1"], fingerprints)
         else:
             fingerprints_ = self.process(data_[in_column].fillna("").to_list())
-            fingerprints = [get_fp(x["fingerprint"]) for x in fingerprints_]
+            print(fingerprints_)
+            fingerprints = [self.get_fp(x["fingerprint"]) for x in fingerprints_]
 
 
         if inplace:
@@ -147,13 +148,21 @@ class BaseFingerprinter:
         if inplace:
             return
         return data_
+
+
     
+    def get_fp(self, fp, length = None, b64decode = True):
+        if length is None:
+            length = self.get_fp_length()
+            print(length)
+        return get_fp(fp, length, b64decode)
+
 
 
 # B64-decodes one fingerprint
-def get_fp(fp, length = None, b64decode = True):
+def get_fp(fp, length, b64decode = True):
     if length is None:
-        length = Fingerprinter.static_fp_len()
+        return None
     if fp is None:
         return None
     if b64decode:
@@ -164,4 +173,14 @@ def get_fp(fp, length = None, b64decode = True):
     fp_bits = process_fp_numpy_block(fp_bytes)
     # potentially work around alignment issues on the last bits
     fp_bits = fp_bits[:,:length]
-    return(fp_bits)
+    return fp_bits
+
+def process_fp_numpy_block(fp_bytes):
+    # fp_block = np.r_[[np.frombuffer(fp, dtype=np.uint8) 
+    #     for fp in fp_bytes if fp is not None]]
+    fp_block = np.unpackbits(fp_bytes, axis = 1, bitorder="little")
+    return fp_block
+
+def repack_fp_numpy(X_fp):
+    fp_bytes = np.packbits(X_fp, bitorder = 'little').tobytes()
+    return fp_bytes
