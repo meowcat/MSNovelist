@@ -110,8 +110,16 @@ class MistFingerprinter(BaseFingerprinter):
 
 
         mol = [Chem.MolFromSmiles(x) for x in smiles]
+        def try_moltosmiles(m):
+            smiles = None
+            try:
+                smiles = Chem.MolToSmiles(m, isomericSmiles=False)
+            except:
+                print("Error generating SMILES")
+            return smiles
+            
         smiles_kekulized = [
-            Chem.MolToSmiles(x) if x is not None
+            try_moltosmiles(x) if x is not None
             else "" for  x in mol
             ]
         data = [{
@@ -126,12 +134,15 @@ class MistFingerprinter(BaseFingerprinter):
 
             def calc_fp(smiles):
 
-                m = Chem.MolFromSmiles(smiles)
-                r = AllChem.GetMorganFingerprintAsBitVect(m, self.radius, nBits=self.bits)
-                fp_bits_num = [x for x in r.GetOnBits()]
-                
                 fp = np.zeros((1, self.bits), dtype=np.uint8)
-                fp[0,fp_bits_num] = 1
+                try:
+                    m = Chem.MolFromSmiles(smiles)
+                    r = AllChem.GetMorganFingerprintAsBitVect(m, self.radius, nBits=self.bits)
+                    fp_bits_num = [x for x in r.GetOnBits()]
+                    fp[0,fp_bits_num] = 1
+                except:
+                    print("Error generating fingerprint")
+                
                 return fp
             
             def calc_and_pack_fp(smiles):
