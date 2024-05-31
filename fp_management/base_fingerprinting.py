@@ -154,7 +154,6 @@ class BaseFingerprinter:
     def get_fp(self, fp, length = None, b64decode = True):
         if length is None:
             length = self.get_fp_length()
-            print(length)
         return get_fp(fp, length, b64decode)
 
 
