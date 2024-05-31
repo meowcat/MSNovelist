@@ -108,8 +108,14 @@ class MistFingerprinter(BaseFingerprinter):
 
         '''
 
-
-        mol = [Chem.MolFromSmiles(x) for x in smiles]
+        def try_molfromsmiles(s, id = 0):
+            m = None
+            m = Chem.MolFromSmiles(s) 
+            if m is None: 
+                print(f"failed parsing id {id} - {s}")
+            return m
+        
+        mol = [try_molfromsmiles(x, id) for id, x in enumerate(smiles)]
         def try_moltosmiles(m):
             smiles = None
             try:
