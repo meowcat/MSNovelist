@@ -1,0 +1,107 @@
+base_folder: /home/stravsmi/msmsgym/MSNovelist-private/
+batch_size: 256
+cv_fold: 1
+cv_folds: 10
+db_path_train:
+  construct_from: smiles
+  fp_map: "/home/stravsmi/msmsgym/msnovelist-data/fingerprint_map_pseudo.tsv"
+  path: /home/stravsmi/msmsgym/msnovelist-data/mist-9652ac1e-0a8f-4ad0-b622-8092332976d7.db
+  pipeline_options:
+    embed_X: false
+    fingerprint_selected: fingerprint_sampled
+  reload_smiles_pubchem: false
+db_path_eval:
+  construct_from: smiles
+  fp_map: "/home/stravsmi/msmsgym/msnovelist-data/fingerprint_map_pseudo.tsv"
+  path: /home/stravsmi/msmsgym/msnovelist-data/mist-val-e76ec6be-057a-4207-b46d-6ba1b867c7f9.db
+  pipeline_options:
+    embed_X: false
+    fingerprint_selected: fingerprint_degraded
+  reload_smiles_pubchem: false
+# db_path_template:
+#   construct_from: smiles
+#   fp_map: /contrib/fingerprinter_cli/csi_fingerid_mod.tsv
+#   path: /msnovelist-data/minimal-dataset/sirius6-minimal.db
+#   pipeline_options:
+#     embed_X: false
+#   reload_smiles_pubchem: false
+db_path_sampler:
+  construct_from: smiles
+  fp_map: "/home/stravsmi/msmsgym/msnovelist-data/fingerprint_map_pseudo.tsv"
+  path: /home/stravsmi/msmsgym/msnovelist-data/mist-val-e76ec6be-057a-4207-b46d-6ba1b867c7f9.db
+  pipeline_options:
+    embed_X: false
+  reload_smiles_pubchem: false
+db_pubchem: /msnovelist/data/pubchem-dummy/pubchem_ref_dummy.db
+decoder_config:
+  clip_invalid_counts: false
+  tokenization: tokens_process
+decoder_name: beam_search
+epochs: 30
+eval_counter: ''
+eval_detail: false
+eval_folder: /tmp/mistnovelist-eval/
+eval_fingerprint_all: false
+eval_id: ''
+eval_k: 128
+eval_kk: 128
+eval_n: 8
+eval_n_total: 300
+eval_steps: 128
+eval_temperature: 1.0
+eval_top_n: 1
+evaluation_set: dataset
+f1_cutoff: 0.5
+fingerprinter_cache: /tmp/fingerprint_cache.db
+normalizer_path: /contrib/fingerprinter_cli/bin/smiles_normalizer
+sirius_path: /contrib/sirius/bin/sirius
+fp_map: "/home/stravsmi/msmsgym/msnovelist-data/fingerprint_map_pseudo.tsv"
+fp_map_evaluation: "/home/stravsmi/msmsgym/msnovelist-data/fingerprint_map_pseudo.tsv"
+fp_overlay_method: none
+fp_source: ''
+hdf5_lock: 'FALSE'
+log_folder: /tmp/
+model_config:
+  loss_weights:
+    out_nhydrogen: 0.03
+    out_smiles: 1
+  use_auxiliary_counter: true
+  use_fingerprint: true
+  use_hydrogen_estimator: true
+  encoder_dropout: [0.3, 0.3]
+  encoder_input_dropout: None
+model_name: models.model_flex_20190401
+model_tag: msnovelmist
+pipeline_encoder:
+- fingerprint_selected
+- mol_form
+- n_hydrogen
+pipeline_reference:
+- smiles_canonical
+- fingerprint_degraded
+pipeline_x:
+- fingerprint_selected
+- mol_form
+- tokens_X
+pipeline_x_eval: []
+pipeline_y:
+- tokens_y
+- n_hydrogen
+random_seed_global: ''
+rerank_sirius_results_n: 99999
+#sampler_name: fp_sampling.cv_sampler_direct
+sampler_name: "gamma_bitmatrix"
+sampler_config:
+  mean: 0
+  stddev: 2
+  reverse_0_stats: false
+  unchanged_rate: 0.05
+steps_per_epoch: -1
+steps_per_epoch_validation: -1
+tensorflow_trace: false
+training_id: ''
+training_set: train
+training_verbose: 1
+validation_set: validate
+weights: w-20-0.069-0.074.hdf5
+weights_folder: /target/evaluation/m-36719628/1

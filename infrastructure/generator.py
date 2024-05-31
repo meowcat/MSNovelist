@@ -5,8 +5,6 @@ Created on Wed Sep  5 23:45:42 2018
 @author: dvizard
 """
 
-import fp_management.fingerprinting as fp
-import smiles_config as sc
 import numpy as np
 import smiles_process as sp
 import tokens_process as tkp
