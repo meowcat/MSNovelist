@@ -76,6 +76,7 @@ def smiles_pipeline(dataset,
                     unpickle_mf = True,
                     embed_X = True,
                     map_fingerprints = True,
+                    fingerprinter = None,
                     **kwargs):
     
     if not map_fingerprints:
@@ -135,7 +136,12 @@ def smiles_pipeline(dataset,
         t.set_shape([None, length])
         return t
 
-    fingerprint_len = tf_strings.length(fpr[0], unit="BYTE")
+    if fingerprinter is None:
+        fingerprint_len = tf_strings.length(fpr[0], unit="BYTE")
+        print(f"Using data-derived fingerprint length of {fingerprint_len}")
+    else:
+        fingerprint_len = fingerprinter.get_fp_length()
+        print(f"Using fingerprinter-specified fingerprint length of {fingerprint_len}")
 
     if unpack:
         logger.info("using unpack")
