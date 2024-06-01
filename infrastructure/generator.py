@@ -60,8 +60,8 @@ def xy_tokens_pipeline(dataset_batch_smiles,
     else:
         logger.info("not using embed_X")
     return dataset_batch_X, dataset_batch_y
-            
 
+fpr_dict = {}            
 def smiles_pipeline(dataset, 
                     batch_size,
                     fp_map = None,
@@ -73,10 +73,10 @@ def smiles_pipeline(dataset,
                     hinting = False,
                     return_smiles = False,
                     unpack = True,
+                    unpackbits = False,
                     unpickle_mf = True,
                     embed_X = True,
                     map_fingerprints = True,
-                    fingerprinter = None,
                     **kwargs):
     
     if not map_fingerprints:
@@ -136,12 +136,20 @@ def smiles_pipeline(dataset,
         t.set_shape([None, length])
         return t
 
-    if fingerprinter is None:
-        fingerprint_len = tf_strings.length(fpr[0], unit="BYTE")
-        print(f"Using data-derived fingerprint length of {fingerprint_len}")
-    else:
-        fingerprint_len = fingerprinter.get_fp_length()
-        print(f"Using fingerprinter-specified fingerprint length of {fingerprint_len}")
+    def decode_unpackbits(x, length,  bitorder="little"):
+        if bitorder == "little":
+            b = tf.constant((1, 2, 4, 8, 16, 32, 64, 128), shape=(1,1,8), dtype=tf.uint8)
+        else:
+            b = tf.constant((128, 64, 32, 16, 8, 4, 2, 1), shape=(1,1,8), dtype=tf.uint8)
+        x_bitdim = tf.expand_dims(x, 2)
+        bits = tf.bitwise.bitwise_and(x_bitdim, b) // b
+        sh = tf.shape(bits)
+        bits_wide = tf.reshape(bits, [-1, length * 8])
+        #bits_wide.set_shape([None, length * 8])
+        return bits_wide
+
+    fingerprint_len = tf_strings.length(fpr[0], unit="BYTE")
+    print(f"Using data-derived fingerprint length of {fingerprint_len} (before bit-unpacking)")
 
     if unpack:
         logger.info("using unpack")
@@ -152,6 +160,14 @@ def smiles_pipeline(dataset,
     else:
         logger.info("not using unpack")
 
+    if unpackbits:
+        logger.info("using unpackbits")
+        dataset_batch_fpr = dataset_batch_fpr.map(
+            lambda x: decode_unpackbits(x, fingerprint_len)
+        )
+        dataset_batch_fprd = dataset_batch_fprd.map(
+            lambda x: decode_unpackbits(x, fingerprint_len)
+        )
 
     # # Set a fixed size for the two outputs, otherwise decode_raw can't set the shape
     # # This is required because fixed_length= is buggy in our old version of TF

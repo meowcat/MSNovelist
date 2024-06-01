@@ -110,10 +110,15 @@ class BasicTpfpSampler(Sampler):
 
         '''
         config_ = {
-            'unchanged_rate': 0
+            'unchanged_rate': 0.01,
+            'tpr': 0.7,
+            'fpr': 0.1
         }
         if config is not None: 
             config_.update(config)
+
+        self.tpr = config_["tpr"]
+        self.fpr = config_["fpr"]
         Sampler.__init__(self)
         #self.stats = stats
         self.generator = generator
@@ -142,6 +147,13 @@ class BasicTpfpSampler(Sampler):
         '''
         rand = self.generator.uniform(tf.shape(fp), dtype="float32")
 
+        unchanged = tf.expand_dims(
+            tf.cast(
+                self.generator.uniform(tf.shape(fp)[0:1], dtype="float32") < self.unchanged_rate,
+                "float32"),
+            1
+            )
+
         #print(rand.numpy())
         # bits_x1 are the sampling results where x_j,i = 1
         bits_x0 = tf.cast(rand < self.fpr, "float32")
@@ -149,9 +161,9 @@ class BasicTpfpSampler(Sampler):
 
         bits_sampled = fp * bits_x1 + (1-fp) * bits_x0
         #bits_masked = bits_unmasked
-        #bits_with_unchanged = (1-unchanged) * bits_sampled + unchanged * fp
+        bits_with_unchanged = (1-unchanged) * bits_sampled + unchanged * fp
 
-        return bits_sampled
+        return bits_with_unchanged
     
     @staticmethod
     def tanimoto(fp1, fp2):
