@@ -33,6 +33,13 @@ sqlite3 $DB_STEP1 << EOF
 	            WHERE compounds.inchikey1 = inchikeys.inchikey1 
                 );
     
+
+    CREATE INDEX IF NOT EXISTS idx_folds ON compounds (grp);
+    CREATE INDEX IF NOT EXISTS idx_inchikeys ON compounds (inchikey1);
+
+    UPDATE compounds
+    SET perm_order = random();
+
     -- update inchikeys set grp = 'fold' || (id % 10) WHERE grp == 'train';
     -- update compounds set grp = (
     --    SELECT grp from inchikeys 
@@ -62,7 +69,12 @@ sqlite3 $DB_STEP2 << EOF
                 SELECT MIN(id) FROM compounds
 	            WHERE compounds.inchikey1 = inchikeys.inchikey1 
                 );
-    
+    CREATE INDEX IF NOT EXISTS idx_folds ON compounds (grp);
+    CREATE INDEX IF NOT EXISTS idx_inchikeys ON compounds (inchikey1);
+
+    UPDATE compounds
+    SET perm_order = random();
+
     -- update inchikeys set grp = 'fold' || (id % 10) WHERE grp == 'train';
 EOF
 
