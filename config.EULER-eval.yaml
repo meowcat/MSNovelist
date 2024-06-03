@@ -4,8 +4,8 @@ cv_fold: 1
 cv_folds: 10
 db_path_train:
   construct_from: smiles
-  fp_map: "/target/MSNovelist-data/fingerprint_map_pseudo.tsv"
-  path: "/target/MSNovelist-data/mist.db"
+  fp_map: "/data/MSNovelist-data/fingerprint_map_pseudo.tsv"
+  path: "/data/MSNovelist-data/mist.db"
   pipeline_options:
     embed_X: false
     unpackbits: true
@@ -13,11 +13,12 @@ db_path_train:
   reload_smiles_pubchem: false
 db_path_eval:
   construct_from: smiles
-  fp_map: "/target/MSNovelist-data/fingerprint_map_pseudo.tsv"
-  path: "/target/MSNovelist-data/mist_val.db"
+  fp_map: "/data/MSNovelist-data/fingerprint_map_pseudo.tsv"
+  path: "/data/MSNovelist-data/mist_val.db"
   pipeline_options:
     embed_X: false
-    unpackbits: true
+    unpackbits: FALSE
+    unpack: FALSE
     fingerprint_selected: fingerprint_degraded
   reload_smiles_pubchem: false
 # db_path_template:
@@ -29,8 +30,8 @@ db_path_eval:
 #   reload_smiles_pubchem: false
 db_path_sampler:
   construct_from: smiles
-  fp_map: "/target/MSNovelist-data/fingerprint_map_pseudo.tsv"
-  path: "/target/MSNovelist-data/mist_val.db"
+  fp_map: "/data/MSNovelist-data/fingerprint_map_pseudo.tsv"
+  path: "/data/MSNovelist-data/mist_val.db"
   pipeline_options:
     embed_X: false
     unpackbits: true
@@ -58,8 +59,8 @@ f1_cutoff: 0.5
 fingerprinter_cache: /tmp/fingerprint_cache.db
 normalizer_path: /contrib/fingerprinter_cli/bin/smiles_normalizer
 sirius_path: /contrib/sirius/bin/sirius
-fp_map: "/target/MSNovelist-data/fingerprint_map_pseudo.tsv"
-fp_map_evaluation: "/target/MSNovelist-data/fingerprint_map_pseudo.tsv"
+fp_map: "/data/MSNovelist-data/fingerprint_map_pseudo.tsv"
+fp_map_evaluation: "/data/MSNovelist-data/fingerprint_map_pseudo.tsv"
 fp_overlay_method: none
 fp_source: ''
 hdf5_lock: 'FALSE'
@@ -105,5 +106,5 @@ training_id: ''
 training_set: train
 training_verbose: 1
 validation_set: validate
-weights: w-01-0.153-0.092.hdf5
-weights_folder: /data/weights_mist/m-1717414602-mistnovelist/train
+weights: w-02-0.086-0.079.hdf5
+weights_folder: /data/MSNovelist-data/weights

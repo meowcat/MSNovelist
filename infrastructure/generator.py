@@ -77,6 +77,7 @@ def smiles_pipeline(dataset,
                     unpickle_mf = True,
                     embed_X = True,
                     map_fingerprints = True,
+                    degraded_fingerprint_type = "float32",
                     **kwargs):
     
     if not map_fingerprints:
@@ -90,7 +91,7 @@ def smiles_pipeline(dataset,
             ]))
     
     fpr = tf.convert_to_tensor([row["fingerprint"] for row in dataset])
-    fprd_type = "float32"
+    fprd_type = degraded_fingerprint_type
     try:
         fprd = tf.convert_to_tensor([row["fingerprint_degraded"] for row in dataset])
     except ValueError:
@@ -110,14 +111,13 @@ def smiles_pipeline(dataset,
     # a single dataset, set the batch size, and extract the individual
     # batched sub-datasets again. We could also set the batch size
     # on each dataset independently, but this feels cleaner :)
-    dataset_base = tf.data.Dataset.from_tensor_slices(
-        {
+    dataset_base = tf.data.Dataset.from_tensor_slices({
             'smiles_canonical': smiles_canonical,
             'smiles_generic': smiles_generic, 
             'fpr': fpr, 
             'fprd': fprd, 
-            'mf' : mf}
-        )
+            'mf' : mf
+        })
     dataset_batch = dataset_base.batch(batch_size)
     dataset_batch_smiles_generic = dataset_batch.map(
         lambda ds: ds['smiles_generic'])
@@ -148,8 +148,9 @@ def smiles_pipeline(dataset,
         #bits_wide.set_shape([None, length * 8])
         return bits_wide
 
-    fingerprint_len = tf_strings.length(fpr[0], unit="BYTE")
-    print(f"Using data-derived fingerprint length of {fingerprint_len} (before bit-unpacking)")
+    if unpack or unpackbits:
+        fingerprint_len = tf_strings.length(fpr[0], unit="BYTE")
+        print(f"Using data-derived fingerprint length of {fingerprint_len} (before bit-unpacking)")
 
     if unpack:
         logger.info("using unpack")

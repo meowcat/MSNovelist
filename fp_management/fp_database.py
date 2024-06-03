@@ -49,14 +49,17 @@ import re
 #     sc.config["base_folder"],
 #     "pubchem-cid-smiles-inchikey.db")
 
-if 'db_pubchem' in sc.config:
-    db_pubchem_path = sc.config["db_pubchem"]
-else:
-    db_pubchem_path = os.path.join(
-        sc.config["base_folder"],
-        "pubchem_ref/pubchem_ref.db")
+try:
+    if 'db_pubchem' in sc.config:
+        db_pubchem_path = sc.config["db_pubchem"]
+    else:
+        db_pubchem_path = os.path.join(
+            sc.config["base_folder"],
+            "pubchem_ref/pubchem_ref.db")
 
-db_pubchem = sqlite3.connect(db_pubchem_path)
+    db_pubchem = sqlite3.connect(db_pubchem_path)
+except:
+    warn("PubChem database not found or not connected (read-only path?)")
 
 
 

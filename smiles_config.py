@@ -22,9 +22,11 @@ else:
 
 
 FILENAME_DEFAULT = "config.yaml"
-FILENAME_MACHINE = "config." + os.environ['COMPUTERNAME'] + '.yaml'
+config_file = [FILENAME_DEFAULT]
 
-config_file = [FILENAME_DEFAULT, FILENAME_MACHINE]
+if 'COMPUTERNAME' in os.environ:
+    FILENAME_MACHINE = "config." + os.environ['COMPUTERNAME'] + '.yaml'
+    config_file.append(FILENAME_MACHINE)
 if args.config is not None:
     config_file.extend(args.config)
 config = {}
