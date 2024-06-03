@@ -171,7 +171,7 @@ def process_df(block,
     data = fingerprinter.process(block["smiles_in"].fillna("").tolist(), 
                                  calc_fingerprint = False)
 
-    block = block.iloc[[x["data_id"] for x in data],:]
+    block = block.iloc[[x["data_id"] for x in data],:].copy()
     smiles_generic = [d["smiles_generic"] for d in data]
     if "smiles_generic" in write:
         block["smiles_generic"] = smiles_generic

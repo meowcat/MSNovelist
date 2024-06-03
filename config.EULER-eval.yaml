@@ -45,12 +45,12 @@ epochs: 30
 eval_counter: ''
 eval_detail: false
 eval_folder: /data/MSNovelist-results
-eval_fingerprint_all: false
+eval_fingerprint_all: true
 eval_id: ''
 eval_k: 64
 eval_kk: 10
-eval_n: 8
-eval_n_total: 20
+eval_n: 16
+eval_n_total: 200
 eval_steps: 128
 eval_temperature: 1.0
 eval_top_n: 1
