@@ -19,7 +19,7 @@ class Bitmask(IntEnum):
 class SamplerFactory:
     def __init__(self, config):
         self.db_path = config['db_path_sampler']
-        self.bitmatrix_path = pathlib.Path(self.db_path["path"]).with_suffix(".pkl")
+        #self.bitmatrix_path = pathlib.Path(self.db_path["path"]).with_suffix(".pkl")
         self.selected_fold = config['cv_fold']
         self.sampler_config = {}
         if 'sampler_config' in config.keys():
@@ -42,10 +42,10 @@ class SamplerFactory:
         #     print(str(self.ids))
         self.ids.sort()
         
-        with open(self.bitmatrix_path, 'rb') as f:
-            bitmatrix_data_ = pickle.load(f)
-            self.bitmatrix_data = bitmatrix_data_[self.ids, :]
-            self.bitmatrix_stats = self.fingerprint_bit_stats(self.bitmatrix_data)
+        # with open(self.bitmatrix_path, 'rb') as f:
+        #     bitmatrix_data_ = pickle.load(f)
+        #     self.bitmatrix_data = bitmatrix_data_[self.ids, :]
+        #     self.bitmatrix_stats = self.fingerprint_bit_stats(self.bitmatrix_data)
 
     def get_sampler(self):
         if not self._loaded:

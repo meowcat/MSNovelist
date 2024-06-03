@@ -161,7 +161,8 @@ class BlueprintedModel(Model):
             'use_auxiliary_counter': True,
             'use_fingerprint': True,
             'encoder_dropout': None,
-            'encoder_input_dropout': None
+            'encoder_input_dropout': None,
+            'training': True
                 }
         if "model_config" in config:
             config_ = config["model_config"]
@@ -208,7 +209,8 @@ class BlueprintedModel(Model):
             units_decoder = self.config['decoder_hidden_size'],
             zero_out = not self.config['use_fingerprint'],
             dropout = self.config['encoder_dropout'],
-            input_dropout = self.config['encoder_input_dropout']
+            input_dropout = self.config['encoder_input_dropout'],
+            training = self.config['training']
             )
         
         self.hydrogen_estimator = HydrogenEstimator(
