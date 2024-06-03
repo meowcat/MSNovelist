@@ -3,10 +3,10 @@
 #SBATCH --ntasks=4
 #SBATCH --ntasks-per-node=4
 #SBATCH --gpus=1
-#SBATCH --account=es_biol
+#SBATCH --account=es_eawag
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gres=gpumem:16G
-#SBATCH --time=23:59:59
+#SBATCH --time=12:59:59
 #SBATCH --tmp=4G
 
 source .env
@@ -18,7 +18,7 @@ CMD_EXEC=""
 OPTS=""
 case $CMD in
 	"train")
-		CMD_EXEC="/msnovelist/train.sh"
+		CMD_EXEC="python /msnovelist/train_mist.py"
 		OPTS="--nv"
 		FOLD=${SLURM_ARRAY_TASK_ID:-1}
 		JOB=${SLURM_ARRAY_JOB_ID:-$SLURM_JOB_ID}
@@ -39,13 +39,16 @@ fi
 
 echo "source _entrypoint.sh" >> $TMPDIR/.bashrc
 
-cp $DATA_LOC/*.db $TMPDIR
-cp $DATA_LOC/*.pkl $TMPDIR
-cp $DATA_LOC/*.tsv $TMPDIR
+# cp $DATA_LOC/*.db $TMPDIR
+# cp $DATA_LOC/*.pkl $TMPDIR
+# cp $DATA_LOC/*.tsv $TMPDIR
+rsync -ah --info=progress2 $DATA_LOC $TMPDIR
 cp $DATA_LOC/*.yaml $TMPDIR
 cp $CODE_LOC/*.yaml $TMPDIR
 
+ls $TMPDIR
 
+export COMPUTERNAME=EULER
 singularity run \
 	$OPTS \
 	--bind $TMPDIR:/$HOME \
