@@ -44,11 +44,11 @@ decoder_name: beam_search
 epochs: 30
 eval_counter: ''
 eval_detail: false
-eval_folder: /tmp/mistnovelist-eval/
+eval_folder: /data/MSNovelist-results
 eval_fingerprint_all: false
 eval_id: ''
-eval_k: 10
-eval_kk: 64
+eval_k: 64
+eval_kk: 10
 eval_n: 8
 eval_n_total: 20
 eval_steps: 128
@@ -106,5 +106,5 @@ training_id: ''
 training_set: train
 training_verbose: 1
 validation_set: validate
-weights: w-02-0.086-0.079.hdf5
+weights: w-05-0.071-0.069.hdf5
 weights_folder: /data/MSNovelist-data/weights
