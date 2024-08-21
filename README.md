@@ -9,11 +9,15 @@ stravs@imsb.biol.ethz.ch
 
 submitted, bioRxiv: https://www.biorxiv.org/content/10.1101/2021.07.06.450875v1
 
-# 27.2.2023 Backend is down
+# Use SIRIUS 6 instead!
 
-At the moment the CSI:FingerID service backing MSNovelist is **down**. We will need to retrain the model for the new service version, which will unfortunately take a while.
+https://bio.informatik.uni-jena.de/software/sirius/
 
-Sorry for the inconvenience.
+The published version of MSNovelist relied on an old version of SIRIUS for which the backend is not running anymore. For a long time, this left users with no possibility to try out MSNovelist. However, finally, with the **release of SIRIUS 6, MSNovelist was integrated into SIRIUS**. You can now use MSNovelist de novo structure suggestions directly with the SIRIUS GUI (and also the new API provided in service mode.) 
+
+The repository here is mostly what's running there on the backend, plus some API stuff in front that I didn't write, and was retrained on the new data from SIRIUS 6. Unfortunately, this means you cannot use this repo directly, unless you want to dig into retraining it with different fingerprint data from a different fingerprint prediction system. The *mist* branch (also merged here) contains some work on getting MSNovelist to run with predicted Morgan 4096-bit fingerprints, but we didn't get terribly far with it yet.
+
+#  obsolete:
 
 ## Installation and use
 
